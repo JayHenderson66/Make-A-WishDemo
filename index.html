@@ -190,10 +190,121 @@
 
   /* dev-only banner so it's obvious this is a demo build when opened locally */
   .demo-banner{background:#3d1f00;color:#ffd8a0;text-align:center;font-size:0.72rem;padding:6px;letter-spacing:0.03em;}
+
+  /* ============================================================
+     CUSTOM MESSENGER (headless Web Messaging build) — replaces
+     the native Genesys Messenger UI. See build notes in the JS
+     controller below (search "MAW MESSENGER CONTROLLER"). Talks to
+     the exact same deployment/Architect flow as before — this is a
+     transport-UI swap only, not a change to the bot flow itself.
+     ============================================================ */
+  .maw-msgr-launcher{position:fixed;bottom:24px;right:24px;z-index:900;width:60px;height:60px;border-radius:50%;background:var(--brand-blue);box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:transform .2s;}
+  .maw-msgr-launcher:hover{transform:scale(1.06);}
+  .maw-msgr-launcher svg{width:26px;height:26px;fill:#fff;}
+  .maw-msgr-launcher .badge-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;display:none;}
+  .maw-msgr-launcher.has-badge .badge-dot{display:block;}
+
+  .maw-msgr-invite{position:fixed;bottom:96px;right:24px;z-index:899;max-width:280px;background:#fff;border-radius:12px;box-shadow:var(--shadow-md);padding:16px 18px;display:none;animation:fadeIn .3s ease;}
+  .maw-msgr-invite.visible{display:block;}
+  .maw-msgr-invite p{font-size:0.88rem;color:var(--text-dark);margin-bottom:12px;line-height:1.5;}
+  .maw-msgr-invite .invite-row{display:flex;gap:8px;}
+  .maw-msgr-invite button{flex:1;padding:8px 0;border-radius:6px;font-size:0.8rem;font-weight:700;cursor:pointer;border:none;}
+  .maw-msgr-invite .invite-accept{background:var(--brand-blue);color:#fff;}
+  .maw-msgr-invite .invite-dismiss{background:var(--cream);color:var(--text-mid);}
+  .maw-msgr-invite .invite-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:2px;}
+
+  .maw-msgr-panel{position:fixed;bottom:24px;right:24px;z-index:950;width:380px;max-width:calc(100vw - 32px);height:min(640px, calc(100vh - 48px));background:#fff;border-radius:16px;box-shadow:var(--shadow-md);display:none;flex-direction:column;overflow:hidden;font-family:'Lato',sans-serif;}
+  .maw-msgr-panel.open{display:flex;}
+  .maw-msgr-head{background:linear-gradient(120deg,var(--brand-blue),var(--brand-blue-dark));color:#fff;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .maw-msgr-head-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+  .maw-msgr-head-text{flex:1;min-width:0;}
+  .maw-msgr-head-text strong{display:block;font-family:'Droid Serif',serif;font-size:1rem;line-height:1.2;}
+  .maw-msgr-head-text span{font-size:0.74rem;opacity:0.8;display:block;margin-top:2px;}
+  .maw-msgr-head-close{background:none;border:none;color:rgba(255,255,255,0.85);cursor:pointer;font-size:1.05rem;padding:4px 6px;flex-shrink:0;}
+  .maw-msgr-head-close:hover{color:#fff;}
+
+  .maw-msgr-body{flex:1;overflow-y:auto;padding:16px 14px;background:var(--cream);display:flex;flex-direction:column;gap:10px;}
+  .maw-msgr-row{display:flex;flex-direction:column;max-width:86%;}
+  .maw-msgr-row.outbound{align-self:flex-end;align-items:flex-end;}
+  .maw-msgr-row.inbound{align-self:flex-start;align-items:flex-start;}
+  .maw-msgr-bubble{padding:10px 14px;border-radius:14px;font-size:0.87rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+  .maw-msgr-row.outbound .maw-msgr-bubble{background:var(--brand-blue);color:#fff;border-bottom-right-radius:4px;}
+  .maw-msgr-row.inbound .maw-msgr-bubble{background:#fff;color:var(--text-dark);border:1px solid var(--border);border-bottom-left-radius:4px;}
+
+  /* "impact" styling — a warmer, larger treatment for bot lines that read like
+     an emotional story beat rather than routine UI copy, with a small story
+     thumbnail reusing the homepage's existing gradient art. Heuristic-based
+     (see JS), not semantically aware — flagged to Jay as a first pass on
+     "make the kid's story more prominent," not the final Knowledge/rich-media
+     direction he's still deciding on. */
+  .maw-msgr-row.inbound.impact .maw-msgr-bubble{background:linear-gradient(120deg,var(--accent-light),#fff);border-color:#BDEDE9;font-size:0.95rem;font-family:'Droid Serif',serif;line-height:1.6;color:var(--brand-blue-dark);display:flex;gap:10px;align-items:flex-start;}
+  .maw-msgr-impact-thumb{width:34px;height:34px;border-radius:8px;flex-shrink:0;margin-top:2px;}
+
+  .maw-msgr-typing{align-self:flex-start;background:#fff;border:1px solid var(--border);border-radius:14px;padding:10px 14px;display:none;gap:4px;}
+  .maw-msgr-typing.visible{display:flex;}
+  .maw-msgr-typing span{width:6px;height:6px;border-radius:50%;background:var(--text-light);animation:maw-typing-bounce 1.2s infinite;}
+  .maw-msgr-typing span:nth-child(2){animation-delay:.15s;}
+  .maw-msgr-typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes maw-typing-bounce{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-4px);opacity:1;}}
+
+  .maw-msgr-quickreplies{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start;max-width:100%;}
+  .maw-msgr-qr-btn{background:#fff;border:1.5px solid var(--brand-blue);color:var(--brand-blue);font-weight:700;font-size:0.8rem;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all .15s;}
+  .maw-msgr-qr-btn:hover{background:var(--brand-blue);color:#fff;}
+  .maw-msgr-qr-btn:disabled{opacity:0.45;cursor:default;}
+
+  .maw-msgr-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;width:230px;flex-shrink:0;box-shadow:var(--shadow-sm);}
+  .maw-msgr-card-img{height:110px;background-size:cover;background-position:center;}
+  .maw-msgr-card-body{padding:12px 14px 14px;}
+  .maw-msgr-card-title{font-family:'Droid Serif',serif;font-weight:700;font-size:0.92rem;color:var(--brand-blue-dark);margin-bottom:4px;}
+  .maw-msgr-card-desc{font-size:0.8rem;color:var(--text-mid);margin-bottom:10px;line-height:1.4;}
+  .maw-msgr-card-btn{display:block;width:100%;text-align:center;background:var(--brand-blue);color:#fff;border:none;border-radius:6px;padding:8px 0;font-size:0.8rem;font-weight:700;cursor:pointer;margin-bottom:6px;}
+  .maw-msgr-card-btn:last-child{margin-bottom:0;}
+  .maw-msgr-card-btn.secondary{background:var(--cream);color:var(--brand-blue-dark);border:1px solid var(--border);}
+
+  .maw-msgr-carousel{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;max-width:100%;align-self:flex-start;scroll-snap-type:x mandatory;}
+  .maw-msgr-carousel .maw-msgr-card{scroll-snap-align:start;}
+
+  .maw-msgr-system{align-self:center;font-size:0.74rem;color:var(--text-light);text-align:center;padding:4px 10px;}
+
+  .maw-msgr-composer{border-top:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;align-items:center;flex-shrink:0;background:#fff;}
+  .maw-msgr-composer input{flex:1;border:1.5px solid var(--border);border-radius:20px;padding:10px 16px;font-size:0.87rem;font-family:'Lato',sans-serif;outline:none;}
+  .maw-msgr-composer input:focus{border-color:var(--brand-blue);}
+  .maw-msgr-composer button{background:var(--brand-blue);color:#fff;border:none;width:38px;height:38px;border-radius:50%;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .maw-msgr-composer button:disabled{opacity:0.4;cursor:default;}
+  .maw-msgr-composer button svg{width:16px;height:16px;fill:#fff;}
+
+  @media (max-width:480px){
+    .maw-msgr-panel{right:16px;bottom:16px;width:calc(100vw - 32px);height:min(560px, calc(100vh - 90px));}
+    .maw-msgr-launcher{right:16px;bottom:16px;}
+    .maw-msgr-invite{right:16px;bottom:88px;}
+  }
 </style>
 
 <!-- ============================================================
-     Genesys Web Messenger — real snippet, SC6 deployment
+     Genesys Web Messenger bootstrap — deployment cd1b2975-a305-4a13-
+     b5be-d88f85078da6 (env "use1"), updated 2026-09-10. This is a
+     DIFFERENT deployment than the original 11c604f0-... one — that one
+     belonged to another customer's Messenger Configuration, and the
+     brand-new dedicated MAW config Jay was building hit a platform
+     limit on the number of Messenger Configurations an org can have.
+     He resolved it by reusing an existing configuration instead of
+     creating a new one, and confirmed its User Interface field is
+     toggled to Headless SDK and published.
+
+     Flag for next session / worth Jay double-checking: since this is
+     an *existing* config being repurposed (not a from-scratch one
+     built only for MAW), confirm nothing else currently depends on
+     this same Messenger Configuration behaving with a native UI/
+     visible launcher — toggling it to Headless + Hide affects every
+     deployment that shares this configuration, not just this one.
+
+     Nothing server-side (Architect flow/AVA config) changed — this is
+     still a transport/rendering swap only. Once headless is toggled,
+     this bootstrap script stops rendering the native widget and just
+     opens the MessagingService plugin's command/event bus, which the
+     custom widget below drives. Verified against Genesys's own
+     Messenger Headless Mode SDK docs and the "Configure Messenger"
+     resource-center article — not guessed.
      ============================================================ -->
 <script type="text/javascript" charset="utf-8">
   (function (g, e, n, es, ys) {
@@ -205,44 +316,53 @@
     g[e].c = es;
     ys = document.createElement('script'); ys.async = 1; ys.src = n; ys.charset = 'utf-8'; document.head.appendChild(ys);
   })(window, 'Genesys', 'https://apps.mypurecloud.com/genesys-bootstrap/genesys.min.js', {
-    environment: 'prod',
-    deploymentId: '11c604f0-5882-411b-b0f8-7f98b60ee189'
-  });
-</script>
-
-<!-- ============================================================
-     Context hand-off to the Bot Flow / AVA.
-     Pattern proven in a prior demo (ABC Retail): push custom
-     attributes into the Messenger database when the widget opens,
-     so Start Context variables (gift_amount, story_id, role) are
-     available without the visitor repeating themselves.
-
-     NOTE: the exact push points below (Messenger.opened) are
-     verified from Genesys's own docs. Anything wired to a
-     specific in-conversation button (e.g. auto-opening the
-     widget on "Get Started") is NOT verified — Claude had no
-     live network path to test against the real widget. Test
-     those live and adjust as needed.
-     ============================================================ -->
-<script type="text/javascript">
-  window.addEventListener('load', function () {
-    Genesys('subscribe', 'Messenger.opened', function () {
-      Genesys('command', 'Database.set', {
-        messaging: {
-          customAttributes: {
-            gift_amount: window.demoState ? window.demoState.selectedAmount : null,
-            story_id: window.demoState ? window.demoState.selectedStory : null,
-            role: window.demoState ? window.demoState.selectedRole : null
-          }
-        }
-      });
-    });
+    environment: 'use1',
+    deploymentId: 'cd1b2975-a305-4a13-b5be-d88f85078da6'
   });
 </script>
 </head>
 <body>
 
 <div class="demo-banner">DEMO BUILD — Make-A-Wish &times; Genesys internal review only — not the real wish.org site</div>
+
+<!-- ══════════════════════════════════════════════
+     CUSTOM MESSENGER — replaces the native Genesys Messenger UI.
+     Fixed-position, so it sits on top of every page (home, checkout,
+     refer, timeline, etc.) exactly like the native widget did. All
+     rendering/state logic lives in the "MAW MESSENGER CONTROLLER"
+     script near the bottom of this file.
+     ══════════════════════════════════════════════ -->
+<div class="maw-msgr-invite" id="maw-msgr-invite">
+  <button class="invite-close" id="maw-msgr-invite-close" aria-label="Dismiss">&times;</button>
+  <p id="maw-msgr-invite-text">You're the kind of person who could give Sammy hope. See what your gift could do:</p>
+  <div class="invite-row">
+    <button class="invite-dismiss" id="maw-msgr-invite-dismiss">Not now</button>
+    <button class="invite-accept" id="maw-msgr-invite-accept">Let's see</button>
+  </div>
+</div>
+
+<button class="maw-msgr-launcher" id="maw-msgr-launcher" aria-label="Open chat">
+  <span class="badge-dot" id="maw-msgr-badge"></span>
+  <svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8l-4 4V6a1 1 0 0 1 1-1z"/></svg>
+</button>
+
+<div class="maw-msgr-panel" id="maw-msgr-panel">
+  <div class="maw-msgr-head">
+    <div class="maw-msgr-head-avatar">&#128153;</div>
+    <div class="maw-msgr-head-text">
+      <strong>Wishmakers Chat</strong>
+      <span id="maw-msgr-head-status">Connecting&hellip;</span>
+    </div>
+    <button class="maw-msgr-head-close" id="maw-msgr-panel-close" aria-label="Close chat">&times;</button>
+  </div>
+  <div class="maw-msgr-body" id="maw-msgr-body"></div>
+  <div class="maw-msgr-composer">
+    <input type="text" id="maw-msgr-input" placeholder="Type your reply&hellip;" autocomplete="off">
+    <button id="maw-msgr-send" aria-label="Send">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
 
 <div class="utility-bar">
   <div class="utility-inner">
@@ -311,8 +431,13 @@
       Action Map (on segment match): proactive "message" offer —
         headline "You're the kind of person who could give Sammy hope."
         subtext "See what your gift could do."
-        → this renders as the native Messenger proactive banner,
-          NOT something built into this page's HTML.
+        → in headless mode this fires the Journey.qualifiedWebMessagingOffer
+          event, which the custom "maw-msgr-invite" bubble (see markup near
+          the top of <body>, driven by the MAW MESSENGER CONTROLLER script
+          near the bottom of this file) renders instead of the native
+          Predictive Engagement banner. Update #maw-msgr-invite-text's
+          starting copy in the HTML if the Action Map's headline/subtext
+          changes, since that text is currently hardcoded to match it.
       Milestone: Banner Engaged (fires when visitor opens the prompt)
     -->
     <div class="story-grid">
@@ -341,12 +466,12 @@
   </section>
 
   <!--
-    [WIDGET RENDERS HERE — no page markup needed]
-    Once the Action Map above is configured, the proactive banner,
-    quick-reply amount buttons ($25/$50/$100/$250), and AVA's inline
-    personalized reply all render inside the native Messenger widget,
-    positioned bottom-right by the snippet itself. Nothing further to
-    build on this page for Beat 2.
+    [CUSTOM MESSENGER RENDERS HERE — no page markup needed]
+    Once the Action Map above is configured, the proactive invite
+    bubble, quick-reply amount buttons ($25/$50/$100/$250), and AVA's
+    inline personalized reply all render inside the custom Messenger
+    panel (markup near the top of <body>), positioned bottom-right.
+    Nothing further to build on this page for Beat 2.
   -->
 
 </div><!-- /page-home -->
@@ -589,10 +714,12 @@ function monthlyIsOn() {
 
 // ══ REFERRAL (Act 2) ═══════════════════════════════════════════
 function startReferral() {
-  // Real behavior (unverified — no live network access to test):
-  // this should hand off into the Messenger widget conversation.
-  // Fallback shown here so the page is drivable during capture
-  // regardless of exactly how the widget renders its own buttons.
+  // Opens the custom messenger (see MAW MESSENGER CONTROLLER below)
+  // so the visitor picks their role and talks to AVA inside the chat
+  // panel, same as the original widget-based design. The role-button
+  // fallback below stays visible too, in case the live conversation's
+  // own role menu ever needs a visual double-check during capture.
+  if (window.MAWMessenger) window.MAWMessenger.open();
   document.getElementById('refer-role-row').style.display = 'flex';
   document.getElementById('refer-role-row').scrollIntoView({behavior:'smooth', block:'center'});
 }
@@ -622,6 +749,391 @@ function showCaseUpdateState() {
   const requestedPage = new URLSearchParams(window.location.search).get('page');
   if (requestedPage && validPages.includes(requestedPage)) {
     showPage(requestedPage);
+  }
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════
+     MAW MESSENGER CONTROLLER — custom Web Messenger UI
+     ══════════════════════════════════════════════
+     Replaces the native Genesys Messenger widget with a fully custom
+     UI, using the Messenger Headless Mode SDK (same bootstrap script/
+     deploymentId above, just with the deployment's Messenger
+     Configuration "User Interface" field toggled to Headless — see
+     the comment above the Genesys bootstrap <script> tag near the
+     top of <head>). This is a transport/rendering swap only: the
+     Architect flow, AVA config, milestones, and Card/Carousel/
+     QuickReply content driving the conversation are all UNCHANGED —
+     preserves the locked visitor journey per the project's own rule
+     on this.
+
+     Command/event names and the message content-type shapes below
+     (Text / Card / Carousel / QuickReply, "content": [{contentType,
+     ...}]) are verified against Genesys's own docs: the MessagingService
+     plugin reference and the Open/Web Messaging normalized message
+     schema (developer.genesys.cloud). What is NOT yet verified: the
+     *exact* casing/shape this specific deployment's live traffic
+     actually sends (e.g. "QuickReply" vs "QuickReplies" vs
+     "quick-replies" — different Genesys docs pages used slightly
+     different casing for the same concept). The renderer below
+     lower-cases contentType before comparing and console.warns on
+     anything it doesn't recognize instead of failing silently —
+     check the browser console on the first live test against the
+     real deployment and tell me what it logs if any card/carousel/
+     quick-reply doesn't render, so the exact field names can be
+     corrected in one pass rather than guessed at again.
+
+     New UI chrome copy introduced here (header title/status, invite
+     bubble text, placeholder) has no scripted precedent — flagging
+     for sign-off rather than treating as final, per the project's
+     tone rule. Everything else the visitor reads (AVA's replies, the
+     menu questions, card titles) still comes from Architect/AVA
+     exactly as before.
+     ══════════════════════════════════════════════ -->
+<script>
+(function () {
+  var els = {};
+  var started = false;
+  var typingEl = null;
+
+  function $(id) { return document.getElementById(id); }
+
+  function init() {
+    els.launcher = $('maw-msgr-launcher');
+    els.badge = $('maw-msgr-badge');
+    els.panel = $('maw-msgr-panel');
+    els.body = $('maw-msgr-body');
+    els.status = $('maw-msgr-head-status');
+    els.closeBtn = $('maw-msgr-panel-close');
+    els.input = $('maw-msgr-input');
+    els.sendBtn = $('maw-msgr-send');
+    els.invite = $('maw-msgr-invite');
+    els.inviteAccept = $('maw-msgr-invite-accept');
+    els.inviteDismiss = $('maw-msgr-invite-dismiss');
+    els.inviteClose = $('maw-msgr-invite-close');
+
+    els.launcher.addEventListener('click', openPanel);
+    els.closeBtn.addEventListener('click', closePanel);
+    els.inviteAccept.addEventListener('click', function () {
+      hideInvite();
+      openPanel();
+      if (window.Genesys) Genesys('command', 'Engage.accept');
+    });
+    els.inviteDismiss.addEventListener('click', function () {
+      hideInvite();
+      if (window.Genesys) Genesys('command', 'Engage.reject');
+    });
+    els.inviteClose.addEventListener('click', hideInvite);
+    els.sendBtn.addEventListener('click', sendTypedMessage);
+    els.input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') sendTypedMessage();
+    });
+    els.input.addEventListener('input', function () {
+      if (window.Genesys) Genesys('command', 'MessagingService.sendTyping');
+    });
+
+    window.MAWMessenger = { open: openPanel, close: closePanel };
+
+    if (!window.Genesys) {
+      console.warn('[MAW Messenger] Genesys bootstrap script not found on window — check the snippet in <head> loaded.');
+      return;
+    }
+
+    Genesys('subscribe', 'MessagingService.ready', function () {
+      els.status.textContent = 'Online';
+    });
+    Genesys('subscribe', 'MessagingService.started', function () {
+      started = true;
+      els.status.textContent = 'Online';
+    });
+    Genesys('subscribe', 'MessagingService.messagesReceived', function (e) {
+      renderIncoming(e.data && e.data.messages);
+    });
+    Genesys('subscribe', 'MessagingService.restored', function (e) {
+      renderIncoming(e.data && e.data.messages);
+    });
+    Genesys('subscribe', 'MessagingService.typingReceived', showTyping);
+    Genesys('subscribe', 'MessagingService.typingTimeout', hideTyping);
+    Genesys('subscribe', 'MessagingService.conversationDisconnected', function () {
+      started = false;
+      addSystemLine('This conversation has ended.');
+    });
+    Genesys('subscribe', 'MessagingService.error', function (e) {
+      console.warn('[MAW Messenger] MessagingService.error —', e && e.data);
+    });
+    // Custom proactive-invite bubble, replacing the native Predictive
+    // Engagement banner. See the ACTION MAP TRIGGER POINT comment on
+    // the impact-stories section above for the segment config this
+    // depends on.
+    Genesys('subscribe', 'Journey.qualifiedWebMessagingOffer', function () {
+      showInvite();
+    });
+  }
+
+  // ── panel open/close ──────────────────────────────────────────
+  function openPanel() {
+    els.panel.classList.add('open');
+    els.launcher.classList.remove('has-badge');
+    hideInvite();
+    if (!started && window.Genesys) {
+      // Same customAttributes push the native widget used to fire on
+      // Messenger.opened — headless mode has no such native event, so
+      // "visitor opens our custom panel for the first time" is the
+      // equivalent moment. Same Start Context variable names as before
+      // (gift_amount/story_id/role), unchanged on the Architect side.
+      Genesys('command', 'Database.set', {
+        messaging: {
+          customAttributes: {
+            gift_amount: window.demoState ? window.demoState.selectedAmount : null,
+            story_id: window.demoState ? window.demoState.selectedStory : null,
+            role: window.demoState ? window.demoState.selectedRole : null
+          }
+        }
+      });
+      Genesys('command', 'MessagingService.startConversation', {}, function () {}, function () {
+        els.status.textContent = 'Unable to connect';
+        console.warn('[MAW Messenger] MessagingService.startConversation was rejected.');
+      });
+    }
+    els.input.focus();
+  }
+
+  function closePanel() {
+    els.panel.classList.remove('open');
+  }
+
+  function showInvite() {
+    els.invite.classList.add('visible');
+    els.launcher.classList.add('has-badge');
+  }
+  function hideInvite() {
+    els.invite.classList.remove('visible');
+  }
+
+  // ── sending ────────────────────────────────────────────────────
+  // None of these render a bubble themselves — per the MessagingService
+  // plugin docs, a resolved sendMessage publishes messagesReceived with
+  // the same message echoed back, so renderMessage()/renderIncoming()
+  // below is the single source of truth for every bubble, sent or
+  // received. Rendering here too would double up every visitor message.
+  function sendTypedMessage() {
+    var text = els.input.value.trim();
+    if (!text || !window.Genesys) return;
+    els.input.value = '';
+    Genesys('command', 'MessagingService.sendMessage', { message: text });
+  }
+
+  function sendQuickReply(qr) {
+    Genesys('command', 'MessagingService.sendMessage', {
+      type: 'quickReply',
+      postback: { action: qr.action || 'Message', text: qr.text, payload: qr.payload }
+    });
+  }
+
+  function sendCardPostback(action) {
+    Genesys('command', 'MessagingService.sendMessage', {
+      type: 'card',
+      postback: { text: action.text, payload: action.payload }
+    });
+  }
+
+  // ── typing indicator ──────────────────────────────────────────
+  function showTyping() {
+    if (typingEl) return;
+    typingEl = document.createElement('div');
+    typingEl.className = 'maw-msgr-typing visible';
+    typingEl.innerHTML = '<span></span><span></span><span></span>';
+    els.body.appendChild(typingEl);
+    scrollToBottom();
+  }
+  function hideTyping() {
+    if (typingEl) { typingEl.remove(); typingEl = null; }
+  }
+
+  // ── rendering ─────────────────────────────────────────────────
+  function renderIncoming(messages) {
+    if (!messages) return;
+    hideTyping();
+    messages.forEach(renderMessage);
+    scrollToBottom();
+  }
+
+  // Heuristic-only "impact" styling (see CSS comment above
+  // .maw-msgr-row.inbound.impact) — a first pass at making the child's
+  // story more visually prominent, per Jay's ask. Not semantically
+  // aware of which line is actually the scripted impact beat; flagged
+  // as a starting point, not the final rich-media/Knowledge direction.
+  var IMPACT_KEYWORDS = /wish|hope|because of gifts like yours|grateful|treehouse|ballpark|fully funded/i;
+  var STORY_CLASS = { sammy: 'sv-sammy', luna: 'sv-luna', noah: 'sv-noah' };
+
+  function renderMessage(msg) {
+    // NOTE — verified against Genesys's own docs example ("To play a
+    // sound when an Outbound message is received..."): "Outbound" means
+    // platform/bot/agent → visitor, i.e. what AVA or the Digital Bot
+    // Flow said, not what the visitor typed. That's the opposite of the
+    // usual chat-UI instinct ("outbound" = "my own message going out"),
+    // so it's called out here rather than left as a silent assumption.
+    // CSS classes below are named from the visitor's point of view:
+    // .outbound = the visitor's own message (right-aligned), .inbound =
+    // AVA's message (left-aligned) — hence the flip against the raw
+    // Genesys field.
+    var direction = ((msg && msg.direction) || '').toLowerCase();
+    var row = direction === 'outbound' ? 'inbound' : 'outbound';
+
+    if (msg.type === 'Structured' && msg.content && msg.content.length) {
+      msg.content.forEach(function (c) { renderContentItem(c, row); });
+      return;
+    }
+
+    if (msg.text) {
+      var isImpact = row === 'inbound' && msg.text.length > 60 && IMPACT_KEYWORDS.test(msg.text);
+      renderRow(row, [renderTextBubble(msg.text)], isImpact);
+      return;
+    }
+
+    console.warn('[MAW Messenger] Unrecognized message shape, skipping render — check this against a live trace:', msg);
+  }
+
+  function renderContentItem(content, row) {
+    var type = ((content && content.contentType) || '').toLowerCase();
+    if (type === 'card' && content.card) {
+      renderRow(row, [renderCard(content.card)]);
+    } else if (type === 'carousel' && content.carousel && content.carousel.cards) {
+      renderCarousel(content.carousel.cards, row);
+    } else if (type === 'quickreply' || type === 'quickreplies' || type === 'quick-replies') {
+      var replies = content.quickReplies || (content.quickReply ? [content.quickReply] : []);
+      renderQuickReplies(replies);
+    } else if (type === 'attachment' && content.attachment) {
+      renderRow(row, [renderAttachment(content.attachment)]);
+    } else {
+      console.warn('[MAW Messenger] Unrecognized content type, skipping render — check this against a live trace:', content);
+    }
+  }
+
+  function renderTextBubble(text) {
+    var b = document.createElement('div');
+    b.className = 'maw-msgr-bubble';
+    b.textContent = text;
+    return b;
+  }
+
+  function renderAttachment(att) {
+    var b = document.createElement('div');
+    b.className = 'maw-msgr-bubble';
+    if (att.mediaType === 'Image' && att.url) {
+      var img = document.createElement('img');
+      img.src = att.url;
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '8px';
+      img.alt = att.text || 'Shared image';
+      b.appendChild(img);
+    } else {
+      b.textContent = att.text || att.filename || 'Attachment';
+    }
+    return b;
+  }
+
+  function renderCard(card) {
+    var el = document.createElement('div');
+    el.className = 'maw-msgr-card';
+    if (card.image) {
+      var img = document.createElement('div');
+      img.className = 'maw-msgr-card-img';
+      img.style.backgroundImage = 'url(' + card.image + ')';
+      el.appendChild(img);
+    }
+    var body = document.createElement('div');
+    body.className = 'maw-msgr-card-body';
+    if (card.title) {
+      var t = document.createElement('div');
+      t.className = 'maw-msgr-card-title';
+      t.textContent = card.title;
+      body.appendChild(t);
+    }
+    if (card.description) {
+      var d = document.createElement('div');
+      d.className = 'maw-msgr-card-desc';
+      d.textContent = card.description;
+      body.appendChild(d);
+    }
+    (card.actions || []).forEach(function (action) {
+      var btn = document.createElement('button');
+      btn.className = 'maw-msgr-card-btn' + (action.type === 'Link' ? ' secondary' : '');
+      btn.textContent = action.text || (action.type === 'Link' ? 'Open' : 'Select');
+      btn.addEventListener('click', function () {
+        if (action.type === 'Link' && action.url) {
+          window.open(action.url, '_blank');
+        } else {
+          sendCardPostback(action);
+        }
+      });
+      body.appendChild(btn);
+    });
+    el.appendChild(body);
+    return el;
+  }
+
+  function renderCarousel(cards, row) {
+    var wrap = document.createElement('div');
+    wrap.className = 'maw-msgr-carousel';
+    cards.forEach(function (card) { wrap.appendChild(renderCard(card)); });
+    renderRow(row, [wrap]);
+  }
+
+  function renderQuickReplies(replies) {
+    if (!replies || !replies.length) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'maw-msgr-quickreplies';
+    replies.forEach(function (qr) {
+      var btn = document.createElement('button');
+      btn.className = 'maw-msgr-qr-btn';
+      btn.textContent = qr.text;
+      btn.addEventListener('click', function () {
+        Array.prototype.forEach.call(wrap.querySelectorAll('button'), function (b) { b.disabled = true; });
+        sendQuickReply(qr);
+      });
+      wrap.appendChild(btn);
+    });
+    els.body.appendChild(wrap);
+    scrollToBottom();
+  }
+
+  function renderRow(direction, children, impact) {
+    var row = document.createElement('div');
+    row.className = 'maw-msgr-row ' + direction + (impact ? ' impact' : '');
+    if (impact) {
+      var storyId = window.demoState ? window.demoState.selectedStory : null;
+      var thumbClass = STORY_CLASS[storyId] || 'sv-sammy';
+      children.forEach(function (child) {
+        if (child.classList && child.classList.contains('maw-msgr-bubble')) {
+          var thumb = document.createElement('div');
+          thumb.className = 'maw-msgr-impact-thumb ' + thumbClass;
+          child.insertBefore(thumb, child.firstChild);
+        }
+      });
+    }
+    children.forEach(function (c) { row.appendChild(c); });
+    els.body.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function addSystemLine(text) {
+    var el = document.createElement('div');
+    el.className = 'maw-msgr-system';
+    el.textContent = text;
+    els.body.appendChild(el);
+    scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    els.body.scrollTop = els.body.scrollHeight;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
 </script>
