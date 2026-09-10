@@ -220,8 +220,9 @@
   .maw-msgr-head-text{flex:1;min-width:0;}
   .maw-msgr-head-text strong{display:block;font-family:'Droid Serif',serif;font-size:1rem;line-height:1.2;}
   .maw-msgr-head-text span{font-size:0.74rem;opacity:0.8;display:block;margin-top:2px;}
-  .maw-msgr-head-close{background:none;border:none;color:rgba(255,255,255,0.85);cursor:pointer;font-size:1.05rem;padding:4px 6px;flex-shrink:0;}
-  .maw-msgr-head-close:hover{color:#fff;}
+  .maw-msgr-head-close,.maw-msgr-head-clear{background:none;border:none;color:rgba(255,255,255,0.85);cursor:pointer;font-size:1.05rem;padding:4px 6px;flex-shrink:0;display:flex;align-items:center;}
+  .maw-msgr-head-close:hover,.maw-msgr-head-clear:hover{color:#fff;}
+  .maw-msgr-head-clear svg{width:17px;height:17px;fill:currentColor;}
 
   .maw-msgr-body{flex:1;overflow-y:auto;padding:16px 14px;background:var(--cream);display:flex;flex-direction:column;gap:10px;}
   .maw-msgr-row{display:flex;flex-direction:column;max-width:86%;}
@@ -353,6 +354,9 @@
       <strong>Wishmakers Chat</strong>
       <span id="maw-msgr-head-status">Connecting&hellip;</span>
     </div>
+    <button class="maw-msgr-head-clear" id="maw-msgr-clear" aria-label="Clear conversation" title="Clear conversation">
+      <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+    </button>
     <button class="maw-msgr-head-close" id="maw-msgr-panel-close" aria-label="Close chat">&times;</button>
   </div>
   <div class="maw-msgr-body" id="maw-msgr-body"></div>
@@ -805,6 +809,7 @@ function showCaseUpdateState() {
     els.body = $('maw-msgr-body');
     els.status = $('maw-msgr-head-status');
     els.closeBtn = $('maw-msgr-panel-close');
+    els.clearBtn = $('maw-msgr-clear');
     els.input = $('maw-msgr-input');
     els.sendBtn = $('maw-msgr-send');
     els.invite = $('maw-msgr-invite');
@@ -814,6 +819,7 @@ function showCaseUpdateState() {
 
     els.launcher.addEventListener('click', openPanel);
     els.closeBtn.addEventListener('click', closePanel);
+    els.clearBtn.addEventListener('click', handleClearConversation);
     els.inviteAccept.addEventListener('click', function () {
       hideInvite();
       openPanel();
@@ -858,6 +864,20 @@ function showCaseUpdateState() {
       started = false;
       addSystemLine('This conversation has ended.');
     });
+    // "Clear conversation" trash-can icon in the header — the Genesys
+    // Cloud UI setting Jay's referring to is the Messenger Configuration's
+    // "Clear Conversation" toggle (Behavior step), which is already On for
+    // this deployment. That setting only turns the *capability* on at the
+    // platform level — in headless mode there's no native trash icon to go
+    // with it, so the button/command wiring below is what actually exposes
+    // it. This is the real, non-recoverable clearConversation command (ends
+    // the interaction in Genesys Cloud, not just a local reset) — matches
+    // what Jay described wanting.
+    Genesys('subscribe', 'MessagingService.conversationCleared', function () {
+      els.body.innerHTML = '';
+      started = false;
+      addSystemLine('Conversation cleared.');
+    });
     Genesys('subscribe', 'MessagingService.error', function (e) {
       console.warn('[MAW Messenger] MessagingService.error —', e && e.data);
     });
@@ -900,6 +920,21 @@ function showCaseUpdateState() {
 
   function closePanel() {
     els.panel.classList.remove('open');
+  }
+
+  function handleClearConversation() {
+    if (!window.Genesys) return;
+    // This is final/non-recoverable per Genesys's own docs (ends the
+    // interaction on the platform side, not just a local reset) — a quick
+    // native confirm avoids an accidental tap wiping a demo mid-conversation.
+    if (!window.confirm('Clear this conversation? This can\'t be undone.')) return;
+    Genesys('command', 'MessagingService.clearConversation', {}, function () {}, function (err) {
+      // Rejects if the deployment's "Clear Conversation" setting is off, or
+      // there's no active conversation to clear — either way, surface it
+      // rather than have the button silently do nothing.
+      console.warn('[MAW Messenger] MessagingService.clearConversation was rejected —', err);
+      addSystemLine('Could not clear the conversation — check the deployment’s Clear Conversation setting.');
+    });
   }
 
   function showInvite() {
