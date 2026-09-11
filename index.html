@@ -116,6 +116,21 @@
   .story-info{padding:16px 18px 20px;}
   .story-name{font-family:'Droid Serif',serif;font-size:1.05rem;font-weight:700;color:var(--brand-blue-dark);margin-bottom:6px;}
   .story-desc{font-size:0.85rem;color:var(--text-mid);}
+  .story-card{outline:none;}
+  .story-card:focus-visible{box-shadow:0 0 0 3px var(--accent-light), var(--shadow-md);}
+  .story-read-more{font-size:0.78rem;font-weight:800;color:var(--brand-blue);margin-top:10px;}
+
+  /* STORY DETAIL PAGE (multi-child browse — bio detail) */
+  .story-detail-hero{height:260px;border-radius:12px;display:flex;align-items:flex-end;box-shadow:var(--shadow-md);margin-bottom:28px;position:relative;}
+  .story-detail-hero .sd-tag{background:rgba(0,20,45,0.55);color:#fff;padding:14px 18px;border-radius:0 0 12px 12px;width:100%;font-size:0.85rem;}
+  .story-detail-hero .sd-tag strong{display:block;font-family:'Droid Serif',serif;font-size:1.3rem;margin-bottom:2px;}
+  .story-bio-text{color:var(--text-mid);font-size:1rem;line-height:1.8;margin-bottom:26px;}
+  .story-detail-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:40px;}
+  .story-switch-row{display:flex;gap:16px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:24px;}
+  .story-switch-card{flex:1;min-width:180px;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:all .2s;}
+  .story-switch-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-sm);}
+  .story-switch-visual{height:90px;}
+  .story-switch-name{padding:10px 12px;font-size:0.82rem;font-weight:700;color:var(--brand-blue-dark);}
 
   /* PAGE HEADER (reused across sub-pages) */
   .page-header{background:var(--brand-blue);color:#fff;padding:48px 48px;}
@@ -395,7 +410,7 @@
 
   <section class="hero">
     <div class="hero-grid">
-      <div class="hero-visual sv-sammy" id="story-sammy" data-story-id="sammy">
+      <div class="hero-visual sv-sammy" id="story-sammy" data-story-id="sammy" style="cursor:pointer;" onclick="showStoryDetail('sammy')">
         <div class="hero-visual-caption">
           <strong>I wish for a day at the ballpark</strong>
           Sammy, 9 &middot; congenital heart condition
@@ -445,25 +460,28 @@
       Milestone: Banner Engaged (fires when visitor opens the prompt)
     -->
     <div class="story-grid">
-      <div class="story-card" data-story-id="sammy">
+      <div class="story-card" data-story-id="sammy" role="button" tabindex="0" onclick="showStoryDetail('sammy')" onkeydown="if(event.key==='Enter')showStoryDetail('sammy')">
         <div class="story-visual sv-sammy" data-tag="Congenital heart condition">&#128153;</div>
         <div class="story-info">
           <div class="story-name">Sammy's Wish: A Day at the Ballpark</div>
           <div class="story-desc">Nine years old. Diagnosed with a congenital heart condition. Sammy's wish was one perfect day at the ballpark with his whole team behind him.</div>
+          <div class="story-read-more">Read Sammy's story &rarr;</div>
         </div>
       </div>
-      <div class="story-card" data-story-id="luna">
+      <div class="story-card" data-story-id="luna" role="button" tabindex="0" onclick="showStoryDetail('luna')" onkeydown="if(event.key==='Enter')showStoryDetail('luna')">
         <div class="story-visual sv-luna" data-tag="Rare autoimmune condition">&#127774;</div>
         <div class="story-info">
           <div class="story-name">Luna's Wish: Meeting Her Favorite Author</div>
           <div class="story-desc">Luna dreamed of writing her own stories one day. Meeting the author who inspired her gave her the push to start.</div>
+          <div class="story-read-more">Read Luna's story &rarr;</div>
         </div>
       </div>
-      <div class="story-card" data-story-id="noah">
+      <div class="story-card" data-story-id="noah" role="button" tabindex="0" onclick="showStoryDetail('noah')" onkeydown="if(event.key==='Enter')showStoryDetail('noah')">
         <div class="story-visual sv-noah" data-tag="Chronic kidney disease">&#127962;</div>
         <div class="story-info">
           <div class="story-name">Noah's Wish: A Treehouse of His Own</div>
           <div class="story-desc">After years of hospital stays, Noah wished for a quiet place at home that felt entirely his — a treehouse looking out over the yard.</div>
+          <div class="story-read-more">Read Noah's story &rarr;</div>
         </div>
       </div>
     </div>
@@ -481,13 +499,42 @@
 </div><!-- /page-home -->
 
 <!-- ══════════════════════════════════════════════
+     PAGE 1b — STORY DETAIL / BIO  (multi-child browse, added per
+     Jay's request: donors can browse beyond the featured Sammy story
+     on the homepage hero, read a full bio, then carry that specific
+     child's context into the chat. Content below is rendered by
+     renderStoryDetail() from the STORIES data object (near the bottom
+     script block), not static markup — this div is just the shell.
+     ══════════════════════════════════════════════ -->
+<div class="page" id="page-story">
+  <div class="page-header">
+    <button class="back-link" onclick="showPage('home')">&larr; Back to all stories</button>
+    <h1 id="sd-headline">A Wish, In Progress</h1>
+  </div>
+  <div class="content-wrap" style="max-width:720px;">
+    <div class="story-detail-hero" id="sd-hero">
+      <div class="sd-tag">
+        <strong id="sd-title"></strong>
+        <span id="sd-subtitle"></span>
+      </div>
+    </div>
+    <p class="story-bio-text" id="sd-bio"></p>
+    <div class="story-detail-ctas">
+      <button class="btn-primary" style="color:#fff;background:var(--brand-blue);" id="sd-give-btn" onclick="openChatForCurrentStory()">Give to this story</button>
+      <button class="btn-ghost" style="border-color:var(--border);color:var(--brand-blue-dark);" onclick="showPage('refer')">Refer a child instead</button>
+    </div>
+    <div class="story-switch-row" id="sd-others"></div>
+  </div>
+</div><!-- /page-story -->
+
+<!-- ══════════════════════════════════════════════
      PAGE 2 — CHECKOUT  (Act 1, Beat 3)
      ══════════════════════════════════════════════ -->
 <div class="page" id="page-checkout">
   <div class="page-header">
     <button class="back-link" onclick="showPage('home')">&larr; Back</button>
     <h1>Complete Your Gift</h1>
-    <p>You're giving to Sammy's story. Every detail below carries forward from your conversation with AVA.</p>
+    <p id="checkout-story-line">You're giving to Sammy's story. Every detail below carries forward from your conversation with AVA.</p>
   </div>
 
   <div class="checkout-wrap">
@@ -666,12 +713,73 @@ window.demoState = {
   selectedRole: null
 };
 
-const VIGNETTES = {
-  25:  "Because of gifts like yours, Sammy's family covers the small things insurance never does — parking, meals, the day-to-day weight lifted.",
-  50:  "Because of gifts like yours, Sammy gets the transportation and travel support that makes his wish day possible.",
-  100: "Because of gifts like yours, Sammy's wish is now fully funded.",
-  250: "Because of gifts like yours, Sammy's wish is fully funded — with enough left over to help start the next child's wish, too."
+// ══ MULTI-CHILD STORY DATA (added: browse-then-personalize) ══════
+// One record per wish kid. `impact`/`vignette` mirror the shape AVA's
+// Scenario A guideline already expects per-story (spec-bot-flow.md
+// scopes Ava's prompt to "given an amount and a story ID" — already
+// story-agnostic by design). Today only story_id:"sammy" has ever been
+// live-tested against the real AVA agent; luna/noah render correctly
+// on this page and push story_id through Database.set on chat open,
+// but AVA itself needs Jay to confirm/extend her knowledge source to
+// those two children before their impact replies come from the real
+// backend rather than this page's own copy. Flagged, not guessed.
+const STORIES = {
+  sammy: {
+    name: 'Sammy', tag: 'Congenital heart condition', visual: 'sv-sammy',
+    title: "Sammy's Wish: A Day at the Ballpark",
+    subtitle: 'Sammy, 9 · congenital heart condition',
+    bio: "Sammy has spent more of his nine years in waiting rooms than most kids spend on a playground. Between appointments, he keeps a worn baseball glove by his bed — a gift from a cousin who plays travel ball. His wish is one full day at the ballpark: first pitch to final out, his whole family in the stands, and a moment on the field with the team he's watched from his hospital bed all season.",
+    impact: {
+      25: "A $25 gift helps cover the small things insurance never does for Sammy's family — parking, meals, the day-to-day weight lifted.",
+      50: "A $50 gift helps get Sammy and his family to the ballpark — the transportation and travel that makes his wish day possible.",
+      100: "A $100 gift helps cover a full day of Sammy's wish — the travel, the tickets, the moment his whole family gets to breathe again.",
+      250: "A $250 gift fully funds Sammy's day at the ballpark, with enough left to help start the next child's wish, too."
+    },
+    vignette: {
+      25: "Because of gifts like yours, Sammy's family covers the small things insurance never does — parking, meals, the day-to-day weight lifted.",
+      50: "Because of gifts like yours, Sammy gets the transportation and travel support that makes his wish day possible.",
+      100: "Because of gifts like yours, Sammy's wish is now fully funded.",
+      250: "Because of gifts like yours, Sammy's wish is fully funded — with enough left over to help start the next child's wish, too."
+    }
+  },
+  luna: {
+    name: 'Luna', tag: 'Rare autoimmune condition', visual: 'sv-luna',
+    title: "Luna's Wish: Meeting Her Favorite Author",
+    subtitle: 'Luna, 11 · rare autoimmune condition',
+    bio: "Luna reads faster than her hospital's library can restock. During her longest flare-up, one series got her through — and she started writing her own chapters in a notebook her mom brought from home. Her wish is to meet the author in person: one afternoon to ask every question she's saved up, and to hear that her own stories are worth finishing.",
+    impact: {
+      25: "A $25 gift helps cover the everyday extras that come with a hospital stay — the notebooks, the rides, the small comforts.",
+      50: "A $50 gift helps get Luna's family to the meeting itself — travel that turns a wish into a real afternoon.",
+      100: "A $100 gift helps fund Luna's afternoon with her favorite author — the trip, the moment, the encouragement to keep writing.",
+      250: "A $250 gift fully funds Luna's wish day, with room to help the next child's story get written, too."
+    },
+    vignette: {
+      25: "Because of gifts like yours, Luna's family has one less thing to worry about on hard hospital days.",
+      50: "Because of gifts like yours, Luna's trip to meet her favorite author is within reach.",
+      100: "Because of gifts like yours, Luna's wish is now fully funded.",
+      250: "Because of gifts like yours, Luna's wish is fully funded — with enough left over to help start the next child's wish, too."
+    }
+  },
+  noah: {
+    name: 'Noah', tag: 'Chronic kidney disease', visual: 'sv-noah',
+    title: "Noah's Wish: A Treehouse of His Own",
+    subtitle: 'Noah, 8 · chronic kidney disease',
+    bio: "After years split between clinic visits and a home that started to feel like just another waiting room, Noah asked for something quieter: a place that was entirely his. His wish is a treehouse in the backyard — a lookout above the yard where, for a few hours at a time, he isn't a patient. Just a kid, up a tree.",
+    impact: {
+      25: "A $25 gift helps cover the small materials and details that make Noah's treehouse feel like his own.",
+      50: "A $50 gift helps bring in the builders who'll turn Noah's backyard into his lookout.",
+      100: "A $100 gift helps fund a real day's work on Noah's treehouse — the place he's been waiting for.",
+      250: "A $250 gift fully funds Noah's treehouse, with enough left to help start the next child's wish, too."
+    },
+    vignette: {
+      25: "Because of gifts like yours, Noah's treehouse gets one step closer to finished.",
+      50: "Because of gifts like yours, the builders can get started on Noah's treehouse this month.",
+      100: "Because of gifts like yours, Noah's wish is now fully funded.",
+      250: "Because of gifts like yours, Noah's wish is fully funded — with enough left over to help start the next child's wish, too."
+    }
+  }
 };
+const VIGNETTES = STORIES.sammy.vignette; // kept for back-compat with any other reference to the old flat table
 
 // ══ PAGE NAVIGATION ════════════════════════════════════════════
 function showPage(id) {
@@ -681,7 +789,61 @@ function showPage(id) {
   const nl = document.getElementById('nl-' + id);
   if (nl) nl.classList.add('active');
   window.scrollTo({top:0});
+  refreshStoryDependentText();
 }
+
+// ══ MULTI-CHILD BROWSE (added: browse-then-personalize) ═══════
+function selectStory(id) {
+  if (!STORIES[id]) return;
+  window.demoState.selectedStory = id;
+  updateInviteText();
+}
+
+function showStoryDetail(id) {
+  selectStory(id);
+  renderStoryDetail(id);
+  showPage('story');
+}
+
+function renderStoryDetail(id) {
+  const s = STORIES[id];
+  if (!s) return;
+  document.getElementById('sd-headline').textContent = s.title;
+  document.getElementById('sd-title').textContent = s.title;
+  document.getElementById('sd-subtitle').textContent = s.subtitle;
+  document.getElementById('sd-bio').textContent = s.bio;
+  const hero = document.getElementById('sd-hero');
+  hero.className = 'story-detail-hero ' + s.visual;
+  document.getElementById('sd-give-btn').textContent = 'Give to ' + s.name + "'s story";
+  const others = Object.keys(STORIES).filter(k => k !== id);
+  const wrap = document.getElementById('sd-others');
+  wrap.innerHTML = '';
+  others.forEach(k => {
+    const o = STORIES[k];
+    const card = document.createElement('div');
+    card.className = 'story-switch-card';
+    card.onclick = () => showStoryDetail(k);
+    card.innerHTML = `<div class="story-switch-visual ${o.visual}"></div><div class="story-switch-name">${o.name}'s Wish &rarr;</div>`;
+    wrap.appendChild(card);
+  });
+}
+
+function openChatForCurrentStory() {
+  if (window.MAWMessenger) window.MAWMessenger.open();
+}
+
+function updateInviteText() {
+  const s = STORIES[window.demoState.selectedStory] || STORIES.sammy;
+  const el = document.getElementById('maw-msgr-invite-text');
+  if (el) el.textContent = `You're the kind of person who could give ${s.name} hope. See what your gift could do.`;
+}
+
+function refreshStoryDependentText() {
+  const s = STORIES[window.demoState.selectedStory] || STORIES.sammy;
+  const co = document.getElementById('checkout-story-line');
+  if (co) co.textContent = `You're giving to ${s.name}'s story. Every detail below carries forward from your conversation with AVA.`;
+}
+updateInviteText();
 
 // ══ CHECKOUT (Beat 3) ══════════════════════════════════════════
 function selectAmount(amount) {
@@ -706,9 +868,11 @@ updateMilestoneLine();
 
 function completeCheckout() {
   const amt = window.demoState.selectedAmount;
+  const s = STORIES[window.demoState.selectedStory] || STORIES.sammy;
   document.getElementById('confirm-headline').textContent =
-    monthlyIsOn() ? 'Thank you — you just gave Sammy hope, every month.' : 'Thank you — you just gave Sammy hope.';
-  document.getElementById('vignette-text').textContent = VIGNETTES[amt] || VIGNETTES[100];
+    monthlyIsOn() ? `Thank you — you just gave ${s.name} hope, every month.` : `Thank you — you just gave ${s.name} hope.`;
+  document.getElementById('vignette-text').textContent = s.vignette[amt] || s.vignette[100];
+  document.querySelector('#page-confirmation .vignette-visual').className = 'vignette-visual ' + s.visual;
   showPage('confirmation');
 }
 function monthlyIsOn() {
