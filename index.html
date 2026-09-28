@@ -113,6 +113,26 @@
   .sv-sammy{background:linear-gradient(135deg,#2E86D6 0%,#0057B8 100%);}
   .sv-luna{background:linear-gradient(135deg,#00BAB3 0%,#007A75 100%);}
   .sv-noah{background:linear-gradient(135deg,#4E9E7C 0%,#1E5B45 100%);}
+  /* Sammy photo: real image in place of the gradient placeholder, with a bottom
+     darkening gradient so captions/tags stay readable over it (mirrors the
+     existing semi-dark overlay treatment used by .story-visual::after and
+     .hero-visual-caption). Luna/Noah stay gradient placeholders until their
+     own source photos are settled. */
+  .hero-visual.sv-sammy,.story-visual.sv-sammy,.vignette-visual.sv-sammy{
+    background:linear-gradient(180deg,rgba(0,20,45,0) 55%,rgba(0,20,45,0.55) 100%),url('images/sammy.jpg') center/cover no-repeat;
+  }
+  /* Luna photo: real image (girl reading, free Unsplash license) in place of
+     the gradient placeholder. Named luna2.jpg because the original luna.jpg
+     in this project turned out to show an adult woman, not an 11-year-old —
+     that file is left in place unused pending Jay's call on what to do with it. */
+  .hero-visual.sv-luna,.story-visual.sv-luna,.vignette-visual.sv-luna{
+    background:linear-gradient(180deg,rgba(0,20,45,0) 55%,rgba(0,20,45,0.55) 100%),url('images/luna2.jpg') center/cover no-repeat;
+  }
+  /* Noah photo: real image (boy climbing a tree, free Unsplash license) in
+     place of the gradient placeholder. */
+  .hero-visual.sv-noah,.story-visual.sv-noah,.vignette-visual.sv-noah{
+    background:linear-gradient(180deg,rgba(0,20,45,0) 55%,rgba(0,20,45,0.55) 100%),url('images/noah.jpg') center/cover no-repeat;
+  }
   .story-info{padding:16px 18px 20px;}
   .story-name{font-family:'Droid Serif',serif;font-size:1.05rem;font-weight:700;color:var(--brand-blue-dark);margin-bottom:6px;}
   .story-desc{font-size:0.85rem;color:var(--text-mid);}
@@ -461,7 +481,7 @@
     -->
     <div class="story-grid">
       <div class="story-card" data-story-id="sammy" role="button" tabindex="0" onclick="showStoryDetail('sammy')" onkeydown="if(event.key==='Enter')showStoryDetail('sammy')">
-        <div class="story-visual sv-sammy" data-tag="Congenital heart condition">&#128153;</div>
+        <div class="story-visual sv-sammy" data-tag="Congenital heart condition"></div>
         <div class="story-info">
           <div class="story-name">Sammy's Wish: A Day at the Ballpark</div>
           <div class="story-desc">Nine years old. Diagnosed with a congenital heart condition. Sammy's wish was one perfect day at the ballpark with his whole team behind him.</div>
@@ -469,7 +489,7 @@
         </div>
       </div>
       <div class="story-card" data-story-id="luna" role="button" tabindex="0" onclick="showStoryDetail('luna')" onkeydown="if(event.key==='Enter')showStoryDetail('luna')">
-        <div class="story-visual sv-luna" data-tag="Rare autoimmune condition">&#127774;</div>
+        <div class="story-visual sv-luna" data-tag="Rare autoimmune condition"></div>
         <div class="story-info">
           <div class="story-name">Luna's Wish: Meeting Her Favorite Author</div>
           <div class="story-desc">Luna dreamed of writing her own stories one day. Meeting the author who inspired her gave her the push to start.</div>
@@ -477,7 +497,7 @@
         </div>
       </div>
       <div class="story-card" data-story-id="noah" role="button" tabindex="0" onclick="showStoryDetail('noah')" onkeydown="if(event.key==='Enter')showStoryDetail('noah')">
-        <div class="story-visual sv-noah" data-tag="Chronic kidney disease">&#127962;</div>
+        <div class="story-visual sv-noah" data-tag="Chronic kidney disease"></div>
         <div class="story-info">
           <div class="story-name">Noah's Wish: A Treehouse of His Own</div>
           <div class="story-desc">After years of hospital stays, Noah wished for a quiet place at home that felt entirely his — a treehouse looking out over the yard.</div>
