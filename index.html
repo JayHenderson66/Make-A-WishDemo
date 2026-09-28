@@ -116,21 +116,23 @@
   /* Sammy photo: real image in place of the gradient placeholder, with a bottom
      darkening gradient so captions/tags stay readable over it (mirrors the
      existing semi-dark overlay treatment used by .story-visual::after and
-     .hero-visual-caption). Luna/Noah stay gradient placeholders until their
-     own source photos are settled. */
-  .hero-visual.sv-sammy,.story-visual.sv-sammy,.vignette-visual.sv-sammy{
+     .hero-visual-caption). Applied to every container class that can carry an
+     sv-* persona class: the homepage hero, homepage grid cards, the alumni
+     vignette, the story-detail-page hero, and the "switch story" mini-cards
+     shown at the bottom of the detail page. */
+  .hero-visual.sv-sammy,.story-visual.sv-sammy,.vignette-visual.sv-sammy,.story-detail-hero.sv-sammy,.story-switch-visual.sv-sammy{
     background:linear-gradient(180deg,rgba(0,20,45,0) 55%,rgba(0,20,45,0.55) 100%),url('images/sammy.jpg') center/cover no-repeat;
   }
   /* Luna photo: real image (girl reading, free Unsplash license) in place of
      the gradient placeholder. Named luna2.jpg because the original luna.jpg
      in this project turned out to show an adult woman, not an 11-year-old —
      that file is left in place unused pending Jay's call on what to do with it. */
-  .hero-visual.sv-luna,.story-visual.sv-luna,.vignette-visual.sv-luna{
+  .hero-visual.sv-luna,.story-visual.sv-luna,.vignette-visual.sv-luna,.story-detail-hero.sv-luna,.story-switch-visual.sv-luna{
     background:linear-gradient(180deg,rgba(0,20,45,0) 55%,rgba(0,20,45,0.55) 100%),url('images/luna2.jpg') center/cover no-repeat;
   }
   /* Noah photo: real image (boy climbing a tree, free Unsplash license) in
      place of the gradient placeholder. */
-  .hero-visual.sv-noah,.story-visual.sv-noah,.vignette-visual.sv-noah{
+  .hero-visual.sv-noah,.story-visual.sv-noah,.vignette-visual.sv-noah,.story-detail-hero.sv-noah,.story-switch-visual.sv-noah{
     background:linear-gradient(180deg,rgba(0,20,45,0) 55%,rgba(0,20,45,0.55) 100%),url('images/noah.jpg') center/cover no-repeat;
   }
   .story-info{padding:16px 18px 20px;}
@@ -727,6 +729,11 @@
 
 <script>
 // ══ STATE ═══════════════════════════════════════════════════════
+// Seed the very first history entry as "home" so that once the visitor has
+// navigated deeper into the demo, browser Back eventually lands back on the
+// home view instead of falling through to whatever page they were on
+// before this site loaded.
+history.replaceState({page:'home', storyId:'sammy'}, '', '');
 window.demoState = {
   selectedAmount: 100,
   selectedStory: 'sammy',
@@ -802,7 +809,10 @@ const STORIES = {
 const VIGNETTES = STORIES.sammy.vignette; // kept for back-compat with any other reference to the old flat table
 
 // ══ PAGE NAVIGATION ════════════════════════════════════════════
-function showPage(id) {
+// ══ IN-APP HISTORY (browser Back/Forward stay inside the demo instead of
+// leaving the site, since this is a single real page with JS-toggled
+// sections rather than separate URLs) ═══════════════════════════════════
+function showPage(id, pushHistory) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
@@ -810,7 +820,19 @@ function showPage(id) {
   if (nl) nl.classList.add('active');
   window.scrollTo({top:0});
   refreshStoryDependentText();
+  if (pushHistory !== false) {
+    history.pushState({page:id, storyId: window.demoState.selectedStory}, '', '');
+  }
 }
+
+window.addEventListener('popstate', function(e) {
+  const state = e.state || {page:'home'};
+  if (state.page === 'story' && state.storyId) {
+    selectStory(state.storyId);
+    renderStoryDetail(state.storyId);
+  }
+  showPage(state.page, false);
+});
 
 // ══ MULTI-CHILD BROWSE (added: browse-then-personalize) ═══════
 function selectStory(id) {
