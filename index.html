@@ -121,7 +121,11 @@
      vignette, the story-detail-page hero, and the "switch story" mini-cards
      shown at the bottom of the detail page. */
   .hero-visual.sv-sammy,.story-visual.sv-sammy,.vignette-visual.sv-sammy,.story-detail-hero.sv-sammy,.story-switch-visual.sv-sammy{
-    background:linear-gradient(180deg,rgba(0,20,45,0) 55%,rgba(0,20,45,0.55) 100%),url('images/sammy.jpg') center/cover no-repeat;
+    /* Swapped 2026-09-29 to a still frame pulled from the same stock clip used for
+       the Act 1 impact video, so the photo and video show the same "Sammy" for
+       visual consistency (Jay's ask). Was images/sammy.jpg (a different stock
+       photo) — revert to that filename here if this frame doesn't work out. */
+    background:linear-gradient(180deg,rgba(0,20,45,0) 55%,rgba(0,20,45,0.55) 100%),url('images/sammy_video_frame.jpg') center/cover no-repeat;
   }
   /* Luna photo: real image (girl reading, free Unsplash license) in place of
      the gradient placeholder. Named luna2.jpg because the original luna.jpg
@@ -1069,11 +1073,15 @@ function showCaseUpdateState() {
       // from the browser console, without needing any AI Studio/
       // Architect change yet: open the chat, then run
       // MAWMessenger.testVideo() in the console.
+      // Default now points at a self-hosted file (images/impact_video.mp4)
+      // instead of the Pexels hotlink used for the first concept test —
+      // upload that file alongside this index.html or pass a URL manually,
+      // e.g. MAWMessenger.testVideo('https://videos.pexels.com/...').
       testVideo: function (url) {
         openPanel();
         renderRow('inbound', [renderAttachment({
           mediaType: 'Video',
-          url: url || 'https://videos.pexels.com/video-files/36847436/15611875_360_640_30fps.mp4'
+          url: url || 'images/impact_video.mp4'
         })]);
         scrollToBottom();
       }
