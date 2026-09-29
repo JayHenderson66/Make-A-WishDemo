@@ -1319,7 +1319,23 @@ function showCaseUpdateState() {
       btn.textContent = action.text || (action.type === 'Link' ? 'Open' : 'Select');
       btn.addEventListener('click', function () {
         if (action.type === 'Link' && action.url) {
-          window.open(action.url, '_blank');
+          // Bug fix (2026-09-29): the Checkout page always defaulted to
+          // $100 because this URL comes from Architect as a hardcoded
+          // literal ("?page=checkout", no amount) and opens in a new tab
+          // via window.open — a fresh browsing context with no access to
+          // this page's window.demoState. Architect's Button value field
+          // for this Card turned out not to support switching to an
+          // expression (confirmed live with Jay — only "Alternative
+          // button label" has that toggle, not "Button value" itself),
+          // so rather than restructure the flow to work around that
+          // platform gap, this appends the amount client-side, using the
+          // value already captured below in renderQuickReplies's click
+          // handler, right before the new tab opens.
+          var url = action.url;
+          if (/[?&]page=checkout/.test(url) && window.demoState && window.demoState.selectedAmount) {
+            url += (url.indexOf('?') === -1 ? '?' : '&') + 'amount=' + encodeURIComponent(window.demoState.selectedAmount);
+          }
+          window.open(url, '_blank');
         } else {
           sendCardPostback(action);
         }
@@ -1347,6 +1363,16 @@ function showCaseUpdateState() {
       btn.textContent = qr.text;
       btn.addEventListener('click', function () {
         Array.prototype.forEach.call(wrap.querySelectorAll('button'), function (b) { b.disabled = true; });
+        // Bug fix (2026-09-29): capture the gift-amount quick-reply
+        // client-side, at the moment it's clicked, so the Card's "Open
+        // URL" button click handler above has a real amount to attach
+        // to the checkout URL. Safe to key off these exact four values —
+        // no other quick-reply menu (role, entry choice) uses them.
+        var val = (qr.value != null ? qr.value : qr.text);
+        if (['25', '50', '100', '250'].indexOf(String(val)) !== -1) {
+          window.demoState = window.demoState || {};
+          window.demoState.selectedAmount = parseInt(val, 10);
+        }
         sendQuickReply(qr);
       });
       wrap.appendChild(btn);
