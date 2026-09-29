@@ -439,7 +439,7 @@
         </div>
       </div>
       <div class="hero-copy">
-        <img src="images/maw_logo.png" alt="Make-A-Wish International" style="height:34px;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.25);margin-bottom:18px;display:block;">
+        <img src="images/maw_logo_transparent.png" alt="Make-A-Wish International" style="height:58px;margin-bottom:20px;display:block;">
         <div class="hero-label">Wishmakers Wanted</div>
         <h1>Every wish grants hope.</h1>
         <p>Read a story below. Stay a while. You might find one that stays with you.</p>
@@ -1060,7 +1060,24 @@ function showCaseUpdateState() {
       if (window.Genesys) Genesys('command', 'MessagingService.sendTyping');
     });
 
-    window.MAWMessenger = { open: openPanel, close: closePanel };
+    window.MAWMessenger = {
+      open: openPanel,
+      close: closePanel,
+      // Temporary test hook (added 2026-09-29, remove once the real
+      // Architect-driven video attachment is wired up and confirmed
+      // live) — lets Jay preview the inline-video concept immediately
+      // from the browser console, without needing any AI Studio/
+      // Architect change yet: open the chat, then run
+      // MAWMessenger.testVideo() in the console.
+      testVideo: function (url) {
+        openPanel();
+        renderRow('inbound', [renderAttachment({
+          mediaType: 'Video',
+          url: url || 'https://videos.pexels.com/video-files/36847436/15611875_360_640_30fps.mp4'
+        })]);
+        scrollToBottom();
+      }
+    };
 
     if (!window.Genesys) {
       console.warn('[MAW Messenger] Genesys bootstrap script not found on window — check the snippet in <head> loaded.');
@@ -1284,6 +1301,32 @@ function showCaseUpdateState() {
       img.style.borderRadius = '8px';
       img.alt = att.text || 'Shared image';
       b.appendChild(img);
+    } else if (att.mediaType === 'Video' && att.url) {
+      // Added 2026-09-29 — proof-of-concept per Jay's ask: an inline,
+      // larger-than-a-thumbnail video playing directly in the chat
+      // bubble (not a link out to the website), for the "see the
+      // impact" moment. Genesys Cloud digital bots can send video via
+      // a public URL through the Communicate action's Rich Text
+      // Builder as of the September 2025 file-attachments release
+      // (Web Messaging is a supported channel) — this assumes that
+      // attachment arrives with the same normalized shape as an image
+      // attachment (mediaType: "Video"), which hasn't been confirmed
+      // against a live trace yet since this is untested end to end.
+      // Sized wider than a normal small attachment on purpose — fills
+      // the bubble's max-width (86% of the panel, set on .maw-msgr-row)
+      // rather than staying thumbnail-sized.
+      var vid = document.createElement('video');
+      vid.src = att.url;
+      vid.controls = true;
+      vid.playsInline = true;
+      vid.style.width = '100%';
+      vid.style.display = 'block';
+      vid.style.borderRadius = '8px';
+      if (att.thumbnail) vid.poster = att.thumbnail;
+      b.style.padding = '0';
+      b.style.overflow = 'hidden';
+      b.style.background = 'transparent';
+      b.appendChild(vid);
     } else {
       b.textContent = att.text || att.filename || 'Attachment';
     }
