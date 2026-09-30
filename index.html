@@ -171,6 +171,21 @@
   .co-amount-row{display:flex;gap:10px;margin-bottom:24px;}
   .co-amount-btn{flex:1;padding:12px 0;border:1.5px solid var(--border);border-radius:6px;background:#fff;font-weight:800;font-size:0.95rem;color:var(--brand-blue-dark);cursor:pointer;transition:all .15s;}
   .co-amount-btn.selected{border-color:var(--brand-blue);background:#EAF2FB;color:var(--brand-blue);}
+
+  /* CHECKOUT MODAL — inline "Continue" from the chat (2026-09-30).
+     Reuses .checkout-card's look via .checkout-modal-inner so it
+     matches the real checkout page visually; see JS section for why
+     this has its own element IDs instead of reusing #page-checkout's. */
+  .checkout-modal-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.55);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;}
+  .checkout-modal-backdrop.open{display:flex;}
+  .checkout-modal-inner{max-width:440px;width:100%;max-height:90vh;overflow-y:auto;position:relative;}
+  .checkout-modal-close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.5rem;line-height:1;color:var(--text-light);cursor:pointer;padding:4px;}
+  .checkout-modal-close:hover{color:var(--text-dark);}
+  .checkout-modal-headline{font-family:'Droid Serif',serif;color:var(--brand-blue-dark);font-size:1.25rem;margin-bottom:6px;padding-right:20px;}
+  .checkout-modal-subline{font-size:0.85rem;color:var(--text-mid);margin-bottom:20px;line-height:1.4;}
+  .checkout-modal-success{text-align:center;padding-top:4px;}
+  .checkout-modal-success .vignette-card{margin-top:14px;}
+
   .co-toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:6px;}
   .co-toggle-label{font-weight:700;font-size:0.92rem;color:var(--brand-blue-dark);display:flex;align-items:center;gap:8px;}
   .co-badge{background:var(--accent);color:#fff;font-size:0.62rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;padding:3px 9px;border-radius:12px;}
@@ -616,6 +631,60 @@
 </div><!-- /page-confirmation -->
 
 <!-- ══════════════════════════════════════════════
+     CHECKOUT MODAL — inline "Continue" from the chat (2026-09-30)
+     Replaces the previous window.open(new tab) behavior for the
+     chat Card's "Continue" button, so completing a gift feels
+     contained within the AVA conversation instead of leaving to a
+     separate page/tab. Deliberately its own small form (own IDs,
+     own selectModalAmount/completeModalCheckout functions in the
+     script below) rather than reusing #page-checkout's markup/IDs —
+     getElementById only ever finds the first match in the document,
+     so cloning or sharing IDs between this and #page-checkout would
+     make one of the two silently stop working. #page-checkout itself
+     is untouched and still works as a full page for any other entry
+     point into checkout.
+     ══════════════════════════════════════════════ -->
+<div class="checkout-modal-backdrop" id="checkout-modal-backdrop">
+  <div class="checkout-card checkout-modal-inner">
+    <button class="checkout-modal-close" id="checkout-modal-close" aria-label="Close">&times;</button>
+
+    <div id="checkout-modal-form">
+      <h2 class="checkout-modal-headline">Complete your gift</h2>
+      <p class="checkout-modal-subline" id="checkout-modal-story-line">You're giving to Sammy's story. Every detail below carries forward from your conversation with AVA.</p>
+
+      <div class="co-amount-row" id="co-modal-amount-row">
+        <button class="co-amount-btn" data-amount="25" onclick="selectModalAmount(25)">$25</button>
+        <button class="co-amount-btn" data-amount="50" onclick="selectModalAmount(50)">$50</button>
+        <button class="co-amount-btn selected" data-amount="100" onclick="selectModalAmount(100)">$100</button>
+        <button class="co-amount-btn" data-amount="250" onclick="selectModalAmount(250)">$250</button>
+      </div>
+
+      <div class="co-toggle-row">
+        <div class="co-toggle-label">Make it monthly <span class="co-badge">Recommended</span></div>
+        <label class="switch">
+          <input type="checkbox" id="co-modal-monthly-toggle" checked onchange="updateModalMilestoneLine()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="co-milestone-line" id="co-modal-milestone-line"></div>
+
+      <button class="co-continue-btn" id="checkout-modal-continue-btn" onclick="completeModalCheckout()">Continue</button>
+    </div>
+
+    <!-- Swapped in by completeModalCheckout() in place of the form
+         above — same modal, no page navigation. -->
+    <div class="checkout-modal-success" id="checkout-modal-success" style="display:none;">
+      <div class="confirm-icon">&#127881;</div>
+      <h2 class="checkout-modal-headline" id="checkout-modal-success-headline"></h2>
+      <div class="vignette-card">
+        <div class="vignette-visual sv-sammy" id="checkout-modal-success-visual"></div>
+        <div class="vignette-text" id="checkout-modal-success-vignette"></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /checkout-modal-backdrop -->
+
+<!-- ══════════════════════════════════════════════
      PAGE 4 — MOCK HOSPITAL RESOURCE PAGE  (Act 2, Beat 1a)
      ══════════════════════════════════════════════ -->
 <div class="page" id="page-hospital">
@@ -926,6 +995,59 @@ function monthlyIsOn() {
   const el = document.getElementById('co-monthly-toggle');
   return el && el.checked;
 }
+
+// ══ CHECKOUT MODAL (2026-09-30) — mirrors the functions above but
+// targets the modal's own elements (co-modal-*), since it's a
+// separate form from #page-checkout rather than a clone of it. ══
+function openCheckoutModal(amount) {
+  const s = STORIES[window.demoState.selectedStory] || STORIES.sammy;
+  document.getElementById('checkout-modal-story-line').textContent =
+    `You're giving to ${s.name}'s story. Every detail below carries forward from your conversation with AVA.`;
+  document.getElementById('checkout-modal-form').style.display = 'block';
+  document.getElementById('checkout-modal-success').style.display = 'none';
+  selectModalAmount(amount || window.demoState.selectedAmount || 100);
+  document.getElementById('checkout-modal-backdrop').classList.add('open');
+}
+
+function closeCheckoutModal() {
+  document.getElementById('checkout-modal-backdrop').classList.remove('open');
+}
+
+function selectModalAmount(amount) {
+  window.demoState.selectedAmount = amount;
+  document.querySelectorAll('#co-modal-amount-row .co-amount-btn').forEach(b => {
+    b.classList.toggle('selected', Number(b.dataset.amount) === amount);
+  });
+  updateModalMilestoneLine();
+}
+
+function updateModalMilestoneLine() {
+  const monthly = document.getElementById('co-modal-monthly-toggle').checked;
+  const amt = window.demoState.selectedAmount;
+  const line = document.getElementById('co-modal-milestone-line');
+  line.innerHTML = monthly ? `<strong>$${amt}/mo</strong> helps fund a wish like Sammy's roughly every quarter.` : '';
+}
+
+function completeModalCheckout() {
+  const amt = window.demoState.selectedAmount;
+  const s = STORIES[window.demoState.selectedStory] || STORIES.sammy;
+  const monthly = document.getElementById('co-modal-monthly-toggle').checked;
+  document.getElementById('checkout-modal-success-headline').textContent =
+    monthly ? `Thank you — you just gave ${s.name} hope, every month.` : `Thank you — you just gave ${s.name} hope.`;
+  document.getElementById('checkout-modal-success-vignette').textContent = s.vignette[amt] || s.vignette[100];
+  document.getElementById('checkout-modal-success-visual').className = 'vignette-visual ' + s.visual;
+  document.getElementById('checkout-modal-form').style.display = 'none';
+  document.getElementById('checkout-modal-success').style.display = 'block';
+}
+
+(function initCheckoutModalDismiss() {
+  const closeBtn = document.getElementById('checkout-modal-close');
+  const backdrop = document.getElementById('checkout-modal-backdrop');
+  if (closeBtn) closeBtn.addEventListener('click', closeCheckoutModal);
+  if (backdrop) backdrop.addEventListener('click', function (e) {
+    if (e.target === backdrop) closeCheckoutModal();
+  });
+})();
 
 // ══ REFERRAL (Act 2) ═══════════════════════════════════════════
 function startReferral() {
@@ -1370,23 +1492,29 @@ function showCaseUpdateState() {
       btn.textContent = action.text || (action.type === 'Link' ? 'Open' : 'Select');
       btn.addEventListener('click', function () {
         if (action.type === 'Link' && action.url) {
-          // Bug fix (2026-09-29): the Checkout page always defaulted to
-          // $100 because this URL comes from Architect as a hardcoded
-          // literal ("?page=checkout", no amount) and opens in a new tab
-          // via window.open — a fresh browsing context with no access to
-          // this page's window.demoState. Architect's Button value field
-          // for this Card turned out not to support switching to an
-          // expression (confirmed live with Jay — only "Alternative
-          // button label" has that toggle, not "Button value" itself),
-          // so rather than restructure the flow to work around that
-          // platform gap, this appends the amount client-side, using the
-          // value already captured below in renderQuickReplies's click
-          // handler, right before the new tab opens.
-          var url = action.url;
-          if (/[?&]page=checkout/.test(url) && window.demoState && window.demoState.selectedAmount) {
-            url += (url.indexOf('?') === -1 ? '?' : '&') + 'amount=' + encodeURIComponent(window.demoState.selectedAmount);
+          // (2026-09-30) Previously always opened in a new tab via
+          // window.open — jarring "kicked out of the conversation"
+          // feeling, and needed the URL-param workaround below (kept
+          // here, now dead code path for the checkout case, in case
+          // Architect's Button value field ever does gain expression
+          // support and this regresses) because a new tab is a fresh
+          // browsing context with no access to this page's
+          // window.demoState. Now: the checkout link opens as an
+          // inline modal in this same document instead — the chat
+          // stays open behind it, and window.demoState is already
+          // shared, so no URL-param passing is needed for that case.
+          // Any other Link-type URL (none currently wired) still
+          // falls back to a new tab, since there's no in-page
+          // destination built for those.
+          if (/[?&]page=checkout/.test(action.url)) {
+            openCheckoutModal(window.demoState && window.demoState.selectedAmount);
+          } else {
+            var url = action.url;
+            if (/[?&]page=checkout/.test(url) && window.demoState && window.demoState.selectedAmount) {
+              url += (url.indexOf('?') === -1 ? '?' : '&') + 'amount=' + encodeURIComponent(window.demoState.selectedAmount);
+            }
+            window.open(url, '_blank');
           }
-          window.open(url, '_blank');
         } else {
           sendCardPostback(action);
         }
