@@ -1383,19 +1383,30 @@ function showCaseUpdateState() {
     // Genesys field.
     var direction = ((msg && msg.direction) || '').toLowerCase();
     var row = direction === 'outbound' ? 'inbound' : 'outbound';
+    var renderedSomething = false;
 
-    if (msg.type === 'Structured' && msg.content && msg.content.length) {
-      msg.content.forEach(function (c) { renderContentItem(c, row); });
-      return;
-    }
-
+    // FIX (2026-09-30) — Digital Menu messages arrive as type:'Structured'
+    // carrying BOTH the prompt/question text (msg.text) AND the quick-reply
+    // buttons (msg.content). The old code treated these as mutually
+    // exclusive branches with an early `return` after the Structured case,
+    // so msg.text was silently dropped on every single menu — only the
+    // bare buttons ever rendered. Root cause of Jay's "it's never asking
+    // me about the teaser" / buttons-with-no-question-text report,
+    // confirmed via live console trace. Now both render, text first.
     if (msg.text) {
       var isImpact = row === 'inbound' && msg.text.length > 60 && IMPACT_KEYWORDS.test(msg.text);
       renderRow(row, [renderTextBubble(msg.text)], isImpact);
-      return;
+      renderedSomething = true;
     }
 
-    console.warn('[MAW Messenger] Unrecognized message shape, skipping render — check this against a live trace:', msg);
+    if (msg.type === 'Structured' && msg.content && msg.content.length) {
+      msg.content.forEach(function (c) { renderContentItem(c, row); });
+      renderedSomething = true;
+    }
+
+    if (!renderedSomething) {
+      console.warn('[MAW Messenger] Unrecognized message shape, skipping render — check this against a live trace:', msg);
+    }
   }
 
   function renderContentItem(content, row) {
