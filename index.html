@@ -186,6 +186,19 @@
   .checkout-modal-success{text-align:center;padding-top:4px;}
   .checkout-modal-success .vignette-card{margin-top:14px;}
 
+  /* VIDEO MODAL — inline "Watch Sammy's Story" from the chat (2026-10-02).
+     Workaround for a Genesys platform gap isolated 2026-10-01: video
+     attachments never reach headless-mode Web Messaging clients, so this
+     plays the video entirely client-side instead of via a Communicate
+     action. Mirrors .checkout-modal-backdrop's overlay pattern but with
+     its own IDs/styling, since the content is a video player, not a form. */
+  .video-modal-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.75);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;}
+  .video-modal-backdrop.open{display:flex;}
+  .video-modal-inner{max-width:560px;width:100%;position:relative;background:#000;border-radius:10px;overflow:hidden;box-shadow:var(--shadow-md);}
+  .video-modal-close{position:absolute;top:8px;right:10px;background:rgba(10,20,40,0.6);border:none;color:#fff;font-size:1.4rem;line-height:1;width:32px;height:32px;border-radius:50%;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;}
+  .video-modal-close:hover{background:rgba(10,20,40,0.85);}
+  .video-modal-inner video{display:block;width:100%;max-height:80vh;}
+
   .co-toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:6px;}
   .co-toggle-label{font-weight:700;font-size:0.92rem;color:var(--brand-blue-dark);display:flex;align-items:center;gap:8px;}
   .co-badge{background:var(--accent);color:#fff;font-size:0.62rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;padding:3px 9px;border-radius:12px;}
@@ -684,6 +697,15 @@
   </div>
 </div><!-- /checkout-modal-backdrop -->
 
+<div class="video-modal-backdrop" id="video-modal-backdrop">
+  <div class="video-modal-inner">
+    <button class="video-modal-close" id="video-modal-close" aria-label="Close">&times;</button>
+    <video id="video-modal-player" playsinline preload="none">
+      <source src="images/impact_video.mp4" type="video/mp4">
+    </video>
+  </div>
+</div><!-- /video-modal-backdrop -->
+
 <!-- ══════════════════════════════════════════════
      PAGE 4 — MOCK HOSPITAL RESOURCE PAGE  (Act 2, Beat 1a)
      ══════════════════════════════════════════════ -->
@@ -1046,6 +1068,40 @@ function completeModalCheckout() {
   if (closeBtn) closeBtn.addEventListener('click', closeCheckoutModal);
   if (backdrop) backdrop.addEventListener('click', function (e) {
     if (e.target === backdrop) closeCheckoutModal();
+  });
+})();
+
+// ══ VIDEO MODAL (2026-10-02) — "Watch Sammy's Story" workaround ═══
+// Genesys can't deliver video attachments to headless-mode Web
+// Messaging clients (confirmed 2026-10-01 via a clean A/B deployment
+// test — see PROJECT_LOG.md). Rather than wait on Genesys Support, the
+// "Impact Video" Communicate action is replaced with a Card button
+// that triggers this modal entirely client-side, reusing the same
+// "opens in place, chat stays open behind it" pattern as the checkout
+// modal above. Invoked from the Impact Teaser card's button click
+// handler in renderCard() below — not wired to any Genesys attachment.
+function openVideoModal() {
+  const backdrop = document.getElementById('video-modal-backdrop');
+  const player = document.getElementById('video-modal-player');
+  if (!backdrop || !player) return;
+  backdrop.classList.add('open');
+  player.currentTime = 0;
+  player.play().catch(function () { /* autoplay-with-sound can be blocked by the browser; controls still let the visitor hit play manually */ });
+}
+
+function closeVideoModal() {
+  const backdrop = document.getElementById('video-modal-backdrop');
+  const player = document.getElementById('video-modal-player');
+  if (backdrop) backdrop.classList.remove('open');
+  if (player) { player.pause(); player.currentTime = 0; }
+}
+
+(function initVideoModalDismiss() {
+  const closeBtn = document.getElementById('video-modal-close');
+  const backdrop = document.getElementById('video-modal-backdrop');
+  if (closeBtn) closeBtn.addEventListener('click', closeVideoModal);
+  if (backdrop) backdrop.addEventListener('click', function (e) {
+    if (e.target === backdrop) closeVideoModal();
   });
 })();
 
@@ -1527,6 +1583,19 @@ function showCaseUpdateState() {
             window.open(url, '_blank');
           }
         } else {
+          // (2026-10-02) Impact Teaser "watch video" workaround — see
+          // openVideoModal() comment above for why this exists. Scoped
+          // to this specific card (by its image filename, which we
+          // control via the Architect build) PLUS a "watch"-labeled
+          // button, so it can't accidentally fire for some other,
+          // future card/button that happens to send a similar postback.
+          // Deliberately not matched on action.payload/value — those
+          // are Architect-internal fields we haven't verified the exact
+          // normalized shape of for Postback-type card buttons yet.
+          var isTeaserCard = card.image && card.image.indexOf('sammy_teaser_play') !== -1;
+          if (isTeaserCard && /watch/i.test(action.text || '')) {
+            openVideoModal();
+          }
           sendCardPostback(action);
         }
       });
