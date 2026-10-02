@@ -1602,14 +1602,21 @@ function showCaseUpdateState() {
         } else {
           // (2026-10-02) Impact Teaser "watch video" workaround — see
           // openVideoModal() comment above for why this exists. Scoped
-          // to this specific card (by its image filename, which we
-          // control via the Architect build) PLUS a "watch"-labeled
-          // button, so it can't accidentally fire for some other,
-          // future card/button that happens to send a similar postback.
-          // Deliberately not matched on action.payload/value — those
-          // are Architect-internal fields we haven't verified the exact
-          // normalized shape of for Postback-type card buttons yet.
-          var isTeaserCard = card.image && card.image.indexOf('sammy_teaser_play') !== -1;
+          // to this specific card (by its title text) PLUS a
+          // "watch"-labeled button, so it can't accidentally fire for
+          // some other, future card/button that happens to send a
+          // similar postback. FIX (same day, found via live console
+          // inspection): originally matched on card.image containing
+          // "sammy_teaser_play" — but Genesys proxies externally-hosted
+          // card images through its own api.mypurecloud.com/.../downloads/
+          // endpoint before handing them to the browser, so card.image is
+          // never the original GitHub URL and that match silently always
+          // failed. card.title is plain text Genesys delivers verbatim,
+          // so matching on that instead is reliable. Deliberately not
+          // matched on action.payload/value either — those are
+          // Architect-internal fields we haven't verified the exact
+          // normalized shape of for Postback-type card buttons.
+          var isTeaserCard = card.title && /gift means to sammy/i.test(card.title);
           if (isTeaserCard && /watch/i.test(action.text || '')) {
             openVideoModal();
           }
