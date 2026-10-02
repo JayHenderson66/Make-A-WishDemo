@@ -330,6 +330,7 @@
   .maw-msgr-card-btn{display:block;width:100%;text-align:center;background:var(--brand-blue);color:#fff;border:none;border-radius:6px;padding:8px 0;font-size:0.8rem;font-weight:700;cursor:pointer;margin-bottom:6px;}
   .maw-msgr-card-btn:last-child{margin-bottom:0;}
   .maw-msgr-card-btn.secondary{background:var(--cream);color:var(--brand-blue-dark);border:1px solid var(--border);}
+  .maw-msgr-card-btn:disabled{opacity:0.45;cursor:default;}
 
   .maw-msgr-carousel{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;max-width:100%;align-self:flex-start;scroll-snap-type:x mandatory;}
   .maw-msgr-carousel .maw-msgr-card{scroll-snap-align:start;}
@@ -1553,11 +1554,27 @@ function showCaseUpdateState() {
       d.textContent = card.description;
       body.appendChild(d);
     }
+    // (2026-10-02) Fix found via a live execution trace: this card's
+    // buttons were never disabled after being clicked, unlike
+    // renderQuickReplies' buttons just below. Real consequence, not
+    // cosmetic — the trace showed a visitor click the Impact Teaser's
+    // "Watch Sammy's Story" button correctly (flow advanced to Gift
+    // Amount), then click the same still-live button again ~70s later;
+    // that stray postback landed on the Gift Amount menu, which didn't
+    // recognize it, triggering a No Match reprompt loop that ended in
+    // the session disconnecting. Postback-type buttons (Link-type ones,
+    // which just open a modal/URL, are harmless to re-click and stay
+    // enabled) now disable every button on this same card once any one
+    // of them is clicked.
+    var cardButtons = [];
     (card.actions || []).forEach(function (action) {
       var btn = document.createElement('button');
       btn.className = 'maw-msgr-card-btn' + (action.type === 'Link' ? ' secondary' : '');
       btn.textContent = action.text || (action.type === 'Link' ? 'Open' : 'Select');
       btn.addEventListener('click', function () {
+        if (!(action.type === 'Link' && action.url)) {
+          cardButtons.forEach(function (b) { b.disabled = true; });
+        }
         if (action.type === 'Link' && action.url) {
           // (2026-09-30) Previously always opened in a new tab via
           // window.open — jarring "kicked out of the conversation"
@@ -1600,6 +1617,7 @@ function showCaseUpdateState() {
         }
       });
       body.appendChild(btn);
+      cardButtons.push(btn);
     });
     el.appendChild(body);
     return el;
