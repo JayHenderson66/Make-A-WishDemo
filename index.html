@@ -192,8 +192,8 @@
      plays the video entirely client-side instead of via a Communicate
      action. Mirrors .checkout-modal-backdrop's overlay pattern but with
      its own IDs/styling, since the content is a video player, not a form. */
-  .video-modal-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.75);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;}
-  .video-modal-backdrop.open{display:flex;}
+  .video-modal-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .35s ease;}
+  .video-modal-backdrop.open{opacity:1;pointer-events:auto;}
   .video-modal-inner{max-width:560px;width:100%;position:relative;background:#000;border-radius:10px;overflow:hidden;box-shadow:var(--shadow-md);}
   .video-modal-close{position:absolute;top:8px;right:10px;background:rgba(10,20,40,0.6);border:none;color:#fff;font-size:1.4rem;line-height:1;width:32px;height:32px;border-radius:50%;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;}
   .video-modal-close:hover{background:rgba(10,20,40,0.85);}
@@ -832,7 +832,14 @@
 // before this site loaded.
 history.replaceState({page:'home', storyId:'sammy'}, '', '');
 window.demoState = {
-  selectedAmount: 100,
+  // (2026-10-02) Changed 100 -> 50 per Jay's preference for demo runs.
+  // This is the REAL default — it's set once here at page load and
+  // then only overwritten when a real $25/50/100/250 quick reply gets
+  // clicked in chat. The `|| 50` fallback added earlier inside
+  // openCheckoutModal() doesn't actually do anything in practice,
+  // since this value is never falsy; left in place as a harmless
+  // last-resort guard but this line is the one that matters.
+  selectedAmount: 50,
   selectedStory: 'sammy',
   selectedRole: null
 };
