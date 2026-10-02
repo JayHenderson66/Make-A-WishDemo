@@ -66,7 +66,15 @@
   /* NAV */
   .nav{position:sticky;top:0;z-index:200;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,0.08);border-bottom:3px solid var(--brand-blue);}
   .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;max-width:1280px;margin:0 auto;}
-  .nav-logo{display:flex;align-items:center;gap:8px;font-family:'Droid Serif',serif;font-size:1.4rem;font-weight:700;color:var(--brand-blue);cursor:pointer;user-select:none;}
+  /* (2026-10-02) Jay's ask: pair the Make-A-Wish International logo with
+     the "Wishmakers" wordmark in the nav, logo prominent on the left,
+     Wishmakers offset to the right — moved up from the hero section,
+     where it previously sat next to the baseball photo (removed from
+     there per Jay's call, to avoid showing the same logo twice). */
+  .nav-logo{display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none;}
+  .nav-logo img{height:38px;display:block;}
+  .nav-logo-divider{width:1px;height:28px;background:var(--border);}
+  .nav-logo-word{font-family:'Droid Serif',serif;font-size:1.1rem;font-weight:700;color:var(--brand-blue);}
   .nav-logo .star{color:var(--accent);}
   .nav-links{display:flex;gap:4px;align-items:center;}
   .nav-link{padding:9px 15px;border-radius:4px;font-size:0.85rem;font-weight:700;color:var(--text-mid);cursor:pointer;transition:all .18s;}
@@ -448,7 +456,11 @@
 
 <nav class="nav">
   <div class="nav-inner">
-    <div class="nav-logo" onclick="showPage('home')"><span class="star">&#10022;</span> Wishmakers</div>
+    <div class="nav-logo" onclick="showPage('home')">
+      <img src="images/maw_logo_transparent.png" alt="Make-A-Wish International">
+      <span class="nav-logo-divider"></span>
+      <span class="nav-logo-word"><span class="star">&#10022;</span> Wishmakers</span>
+    </div>
     <div class="nav-links">
       <div class="nav-link active" id="nl-home" onclick="showPage('home')">Home</div>
       <div class="nav-link" id="nl-hospital" onclick="showPage('hospital')">Hospital Resources</div>
@@ -472,7 +484,9 @@
         </div>
       </div>
       <div class="hero-copy">
-        <img src="images/maw_logo_transparent.png" alt="Make-A-Wish International" style="height:58px;margin-bottom:20px;display:block;">
+        <!-- (2026-10-02) Logo moved up to the nav bar, paired with
+             "Wishmakers" there — removed from here per Jay's call, to
+             avoid showing the same Make-A-Wish logo twice on one page. -->
         <div class="hero-label">Wishmakers Wanted</div>
         <h1>Every wish grants hope.</h1>
         <p>Read a story below. Stay a while. You might find one that stays with you.</p>
