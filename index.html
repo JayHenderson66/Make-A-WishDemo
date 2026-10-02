@@ -308,7 +308,7 @@
      "make the kid's story more prominent," not the final Knowledge/rich-media
      direction he's still deciding on. */
   .maw-msgr-row.inbound.impact .maw-msgr-bubble{background:linear-gradient(120deg,var(--accent-light),#fff);border-color:#BDEDE9;font-size:0.95rem;font-family:'Droid Serif',serif;line-height:1.6;color:var(--brand-blue-dark);display:flex;gap:10px;align-items:flex-start;}
-  .maw-msgr-impact-thumb{width:34px;height:34px;border-radius:8px;flex-shrink:0;margin-top:2px;}
+  .maw-msgr-impact-thumb{width:34px;height:34px;border-radius:8px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.05rem;line-height:1;}
 
   .maw-msgr-typing{align-self:flex-start;background:#fff;border:1px solid var(--border);border-radius:14px;padding:10px 14px;display:none;gap:4px;}
   .maw-msgr-typing.visible{display:flex;}
@@ -1028,7 +1028,13 @@ function openCheckoutModal(amount) {
     `You're giving to ${s.name}'s story. Every detail below carries forward from your conversation with AVA.`;
   document.getElementById('checkout-modal-form').style.display = 'block';
   document.getElementById('checkout-modal-success').style.display = 'none';
-  selectModalAmount(amount || window.demoState.selectedAmount || 100);
+  // (2026-10-02) Primary path already carries forward the amount actually
+  // selected in chat (window.demoState.selectedAmount, set when the $25/
+  // 50/100/250 quick reply is clicked — see renderQuickReplies below).
+  // This 50 is only a last-resort fallback for the unlikely case neither
+  // an explicit amount nor demoState has one — changed from 100 to 50
+  // per Jay's preference, since that's the amount he runs in demos.
+  selectModalAmount(amount || window.demoState.selectedAmount || 50);
   document.getElementById('checkout-modal-backdrop').classList.add('open');
 }
 
@@ -1100,9 +1106,18 @@ function closeVideoModal() {
 (function initVideoModalDismiss() {
   const closeBtn = document.getElementById('video-modal-close');
   const backdrop = document.getElementById('video-modal-backdrop');
+  const player = document.getElementById('video-modal-player');
   if (closeBtn) closeBtn.addEventListener('click', closeVideoModal);
   if (backdrop) backdrop.addEventListener('click', function (e) {
     if (e.target === backdrop) closeVideoModal();
+  });
+  // (2026-10-02) Jay's ask: don't just leave the modal sitting open on
+  // the last frame once playback finishes — close it automatically,
+  // with a brief pause so the ending doesn't feel abrupt. Attached once
+  // here (not inside openVideoModal) since the <video> element persists
+  // across opens and we don't want to stack duplicate listeners.
+  if (player) player.addEventListener('ended', function () {
+    setTimeout(closeVideoModal, 1000);
   });
 })();
 
@@ -1673,8 +1688,15 @@ function showCaseUpdateState() {
       var thumbClass = STORY_CLASS[storyId] || 'sv-sammy';
       children.forEach(function (child) {
         if (child.classList && child.classList.contains('maw-msgr-bubble')) {
+          // (2026-10-02) Jay's ask: this badge was rendering as a blank
+          // colored square — fill it with a real mark rather than leave
+          // it empty. Using the site's own star glyph (same one the
+          // nav-logo uses, "&#10022; Wishmakers") rather than squeezing
+          // the full Make-A-Wish wordmark PNG into a 34px square, which
+          // would just render as illegible blue noise at that size.
           var thumb = document.createElement('div');
           thumb.className = 'maw-msgr-impact-thumb ' + thumbClass;
+          thumb.innerHTML = '&#10022;';
           child.insertBefore(thumb, child.firstChild);
         }
       });
