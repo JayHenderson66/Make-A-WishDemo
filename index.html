@@ -1113,7 +1113,6 @@ function openVideoModal() {
   const backdrop = document.getElementById('video-modal-backdrop');
   const player = document.getElementById('video-modal-player');
   if (!backdrop || !player) return;
-  console.info('[MAW pacing] video modal OPEN'); // TEMP DEBUG
   backdrop.classList.add('open');
   player.currentTime = 0;
   player.play().catch(function () { /* autoplay-with-sound can be blocked by the browser; controls still let the visitor hit play manually */ });
@@ -1122,7 +1121,6 @@ function openVideoModal() {
 function closeVideoModal() {
   const backdrop = document.getElementById('video-modal-backdrop');
   const player = document.getElementById('video-modal-player');
-  console.info('[MAW pacing] video modal CLOSE'); // TEMP DEBUG
   if (backdrop) backdrop.classList.remove('open');
   if (player) { player.pause(); player.currentTime = 0; }
   // Release any bot messages held back while the video was playing
@@ -1486,9 +1484,6 @@ function showCaseUpdateState() {
   function renderIncoming(messages) {
     if (!messages) return;
     hideTyping();
-    // TEMP DEBUG (2026-10-16) — remove once video pacing is confirmed.
-    console.info('[MAW pacing] incoming', messages.length, 'msg(s); videoOpen=', isVideoOpen(), 'held=', heldMessages.length, 'flushing=', flushing,
-      messages.map(function (m) { return (m && m.text || (m && m.type) || '?').toString().slice(0, 40); }));
     if (isVideoOpen() || heldMessages.length || flushing) {
       messages.forEach(function (m) { heldMessages.push(m); });
       if (!isVideoOpen()) flushHeld();
