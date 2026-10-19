@@ -64,7 +64,7 @@
   .utility-inner span:hover{color:#fff;}
 
   /* NAV */
-  .nav{position:sticky;top:0;z-index:200;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,0.08);border-bottom:3px solid var(--brand-blue);}
+  .nav{position:sticky;top:0;z-index:200;background:var(--brand-blue-dark);box-shadow:0 2px 14px rgba(0,0,0,0.12);border-bottom:3px solid var(--brand-blue);}
   .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;max-width:1280px;margin:0 auto;}
   /* (2026-10-02) Jay's ask: pair the Make-A-Wish International logo with
      the "Wishmakers" wordmark in the nav, logo prominent on the left,
@@ -72,16 +72,17 @@
      where it previously sat next to the baseball photo (removed from
      there per Jay's call, to avoid showing the same logo twice). */
   .nav-logo{display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none;}
-  .nav-logo img{height:38px;display:block;}
-  .nav-logo-divider{width:1px;height:28px;background:var(--border);}
-  .nav-logo-word{font-family:'Droid Serif',serif;font-size:1.1rem;font-weight:700;color:var(--brand-blue);}
-  .nav-logo .star{color:var(--accent);}
+  /* (2026-10-19) Nav now matches real wish.org: solid blue bar, solid-white logo. */
+  .nav-logo img{height:44px;display:block;filter:brightness(0) invert(1);}
+  .nav-logo-divider{width:1px;height:28px;background:rgba(255,255,255,0.4);}
+  .nav-logo-word{font-family:'Droid Serif',serif;font-size:1.1rem;font-weight:700;color:#fff;}
+  .nav-logo .star{color:#fff;}
   .nav-links{display:flex;gap:4px;align-items:center;}
-  .nav-link{padding:9px 15px;border-radius:4px;font-size:0.85rem;font-weight:700;color:var(--text-mid);cursor:pointer;transition:all .18s;}
-  .nav-link:hover{color:var(--brand-blue);background:var(--accent-light);}
-  .nav-link.active{color:var(--brand-blue);background:var(--accent-light);}
-  .nav-donate-btn{background:var(--brand-blue);color:#fff;padding:10px 24px;border-radius:4px;font-weight:800;font-size:0.85rem;cursor:pointer;transition:all .18s;margin-left:8px;}
-  .nav-donate-btn:hover{background:var(--brand-blue-dark);transform:translateY(-1px);}
+  .nav-link{padding:9px 15px;border-radius:4px;font-size:0.85rem;font-weight:700;color:#fff;cursor:pointer;transition:all .18s;}
+  .nav-link:hover{color:#fff;background:rgba(255,255,255,0.15);}
+  .nav-link.active{color:#fff;background:rgba(255,255,255,0.2);}
+  .nav-donate-btn{background:#F2575B;color:#fff;padding:10px 24px;border-radius:999px;font-weight:800;font-size:0.85rem;cursor:pointer;transition:all .18s;margin-left:8px;}
+  .nav-donate-btn:hover{background:#D9454A;transform:translateY(-1px);}
 
   .page{display:none;animation:fadeIn .3s ease;}
   .page.active{display:block;}
@@ -335,7 +336,7 @@
   .maw-msgr-card-body{padding:12px 14px 14px;}
   .maw-msgr-card-title{font-family:'Droid Serif',serif;font-weight:700;font-size:0.92rem;color:var(--brand-blue-dark);margin-bottom:4px;}
   .maw-msgr-card-desc{font-size:0.8rem;color:var(--text-mid);margin-bottom:10px;line-height:1.4;}
-  .maw-msgr-card-btn{display:block;width:100%;text-align:center;background:var(--brand-blue);color:#fff;border:none;border-radius:6px;padding:8px 0;font-size:0.8rem;font-weight:700;cursor:pointer;margin-bottom:6px;}
+  .maw-msgr-card-btn{display:block;width:100%;text-align:center;background:var(--brand-blue);color:#fff;border:none;border-radius:6px;padding:11px 12px;font-size:0.78rem;line-height:1.3;font-weight:700;cursor:pointer;margin-bottom:8px;}
   .maw-msgr-card-btn:last-child{margin-bottom:0;}
   .maw-msgr-card-btn.secondary{background:var(--cream);color:var(--brand-blue-dark);border:1px solid var(--border);}
   .maw-msgr-card-btn:disabled{opacity:0.45;cursor:default;}
@@ -1112,6 +1113,7 @@ function openVideoModal() {
   const backdrop = document.getElementById('video-modal-backdrop');
   const player = document.getElementById('video-modal-player');
   if (!backdrop || !player) return;
+  console.info('[MAW pacing] video modal OPEN'); // TEMP DEBUG
   backdrop.classList.add('open');
   player.currentTime = 0;
   player.play().catch(function () { /* autoplay-with-sound can be blocked by the browser; controls still let the visitor hit play manually */ });
@@ -1120,8 +1122,12 @@ function openVideoModal() {
 function closeVideoModal() {
   const backdrop = document.getElementById('video-modal-backdrop');
   const player = document.getElementById('video-modal-player');
+  console.info('[MAW pacing] video modal CLOSE'); // TEMP DEBUG
   if (backdrop) backdrop.classList.remove('open');
   if (player) { player.pause(); player.currentTime = 0; }
+  // Release any bot messages held back while the video was playing
+  // (see renderIncoming in the messenger controller).
+  if (window.mawFlushHeldMessages) setTimeout(window.mawFlushHeldMessages, 400);
 }
 
 (function initVideoModalDismiss() {
@@ -1448,9 +1454,46 @@ function showCaseUpdateState() {
   }
 
   // ── rendering ─────────────────────────────────────────────────
+  // (2026-10-16) Jay's ask: after the visitor watches Sammy's video, the
+  // next bot messages (thank-you line, then the gift-amount menu) were
+  // appearing instantly behind/while the video played, feeling sudden.
+  // While the video modal is open, incoming bot messages are held in a
+  // queue; when the modal closes they are released one at a time with a
+  // brief typing indicator between each so the pacing feels natural.
+  var heldMessages = [];
+  var flushing = false;
+  function isVideoOpen() {
+    var b = document.getElementById('video-modal-backdrop');
+    return !!(b && b.classList.contains('open'));
+  }
+  function flushHeld() {
+    if (flushing || !heldMessages.length) return;
+    flushing = true;
+    (function next() {
+      if (!heldMessages.length) { flushing = false; return; }
+      if (isVideoOpen()) { flushing = false; return; } // re-opened; wait for next close
+      showTyping();
+      setTimeout(function () {
+        hideTyping();
+        renderMessage(heldMessages.shift());
+        scrollToBottom();
+        setTimeout(next, 500);
+      }, 900);
+    })();
+  }
+  window.mawFlushHeldMessages = flushHeld;
+
   function renderIncoming(messages) {
     if (!messages) return;
     hideTyping();
+    // TEMP DEBUG (2026-10-16) — remove once video pacing is confirmed.
+    console.info('[MAW pacing] incoming', messages.length, 'msg(s); videoOpen=', isVideoOpen(), 'held=', heldMessages.length, 'flushing=', flushing,
+      messages.map(function (m) { return (m && m.text || (m && m.type) || '?').toString().slice(0, 40); }));
+    if (isVideoOpen() || heldMessages.length || flushing) {
+      messages.forEach(function (m) { heldMessages.push(m); });
+      if (!isVideoOpen()) flushHeld();
+      return;
+    }
     messages.forEach(renderMessage);
     scrollToBottom();
   }
