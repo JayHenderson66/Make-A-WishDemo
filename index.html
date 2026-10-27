@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wishmakers &mdash; Grant a Wish</title>
+<!-- (2026-10-19) Tab icon: white "✦" star (same mark as the nav wordmark) on
+     Make-A-Wish blue. Inlined as data URIs so no extra image files need
+     uploading to GitHub. -->
+<link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAD+UlEQVR4nO1ba0hTYRh+dnFzrmmbOXWmroiWqSWaGVQaVCZlFyGILmT+CbpQGYIW/omQfkiQSBfoR0R0MbtQgalFf7pbFiojsyy0Mq/VzFFN5/rhXee2o+ecF3f2/Nr5znd5nud7v2/fhSMCE2wptTHKT4WiFJGrWZ1nnCqix4MTM8QOC0918YBTDfbdcQfh9mAnGsZGgLuKB+xqEzvL4HYYpdHxHCAADBkghN4fwDCt4tEJgkG/Zs8QoCZADZEgw38YBB8BHgOoCVCD3AC10ou0fXIDQv29SdsnN2BllIa0fVIDgqbLsSJSwAYkRqixzKCGWOTyCRbrIDUgLV4LzTQvLI9Qk3EgM0Ct9MKGOC0AID1RR0WDzoD9a8LgI5cAALYvC4ZOLSfhQWJA0HQ5stbrB59lUjFObJ1LQYXGgMKMCPgqpCPSdibqkLzAn3cuvBuwNzkMmxMC7b67tH8BQjT8Lox4NSA1NgAF6fPGfa/1leF+Tiz8fKTj5mEbvBmwKV6L4swYSCWO//Ojw1QoP7oI/ip+9gicGyASAVmpetzIjIG3l2vNLZ7jh6fHEhA5cxrH7Dg2YJZWgZKcOOTvMEAiZrbaM+iUqMhbgsy14YzLMgEnR2IhGm8cXheOPatDoZBJJl3fu29m5N2uR9HzZvRY2aXLigFSiQiGYCWS5muwIS4Aq6L9Oem1tk4Lrr9oxoPqDjyv+4XWTsuk65zUdKtSSDFTI8dSgxoxehWSIjSICuVu3Ab4yrArKQRzAn0Qo1eh4qMJNY1daDH9Q/cEI4P1ITBbq8DOxBDsWxOKGSoZa/U+qf2J0+VfcOd1K/5YrKzVy9mxuI9cgqxUPY5smu3y7G8Pxq9dOHDhHR4Zf7DIbgic3wsYdEoUH1qI6DAVo3I2G5B/7zNyiz5MOLxdAefrgPdNZiTkvsS9yjaXy1h6erGloArZV+o4FQ/wtBL8Y7Ei7eRbXH363WnebqsNG/PfovhFMw/MeFwKW3ttSD9Tg/LqDof5Ms7WoLSqnSdWPG+Guq02bCusQmP7X7vvT5U04PIT51HCJnjfDnf87sbu88Yx6e+bzMi+Usc3HZoDkbKqdtytbB2RdvBiLSw9vbxzITsTPH6zfvD3q3oTyngc98NBZsDrT514VW8CAJx7+IWKBu29wLVnfbu7WxUtZBxIDXhk7MCbz534Ze4h40BqQHVDFx7X/qSkQGtAr82G8mqayW8A5Nfjxq9m0vbJDWgx/SNtn9wAts/4mILcAGp4DGDygZHboShF5IkAagLU6DNAiMOgX7N4dIIgMEyrZwiMeBJCFIzSODYC3NkEO9oci3WXr0kcdKrjOcAdosGJBmYCp0pEMOi4/3MHHpWfxkmZAAAAAElFTkSuQmCC">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
 <!--
   ============================================================================
   DEMO SITE — for internal Make-A-Wish / Genesys demo review only.
@@ -302,7 +307,12 @@
   .maw-msgr-head-close:hover,.maw-msgr-head-clear:hover{color:#fff;}
   .maw-msgr-head-clear svg{width:17px;height:17px;fill:currentColor;}
 
-  .maw-msgr-body{flex:1;overflow-y:auto;padding:16px 14px;background:var(--cream);display:flex;flex-direction:column;gap:10px;}
+  /* (2026-10-21) Smoother chat motion: smooth auto-scroll + a gentle
+     fade/slide-in on every incoming message, menu and card, instead of
+     messages popping in and the view snapping to the bottom. */
+  .maw-msgr-body{flex:1;overflow-y:auto;padding:16px 14px;background:var(--cream);display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;}
+  @keyframes maw-msg-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .maw-msgr-row,.maw-msgr-quickreplies,.maw-msgr-system{animation:maw-msg-in .38s ease-out both;}
   .maw-msgr-row{display:flex;flex-direction:column;max-width:86%;}
   .maw-msgr-row.outbound{align-self:flex-end;align-items:flex-end;}
   .maw-msgr-row.inbound{align-self:flex-start;align-items:flex-start;}
@@ -332,7 +342,7 @@
   .maw-msgr-qr-btn:disabled{opacity:0.45;cursor:default;}
 
   .maw-msgr-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;width:230px;flex-shrink:0;box-shadow:var(--shadow-sm);}
-  .maw-msgr-card-img{height:110px;background-size:cover;background-position:center;}
+  .maw-msgr-card-img{height:110px;background-size:cover;background-position:center;background-color:#E3ECF7;}
   .maw-msgr-card-body{padding:12px 14px 14px;}
   .maw-msgr-card-title{font-family:'Droid Serif',serif;font-weight:700;font-size:0.92rem;color:var(--brand-blue-dark);margin-bottom:4px;}
   .maw-msgr-card-desc{font-size:0.8rem;color:var(--text-mid);margin-bottom:10px;line-height:1.4;}
@@ -931,6 +941,57 @@ const VIGNETTES = STORIES.sammy.vignette; // kept for back-compat with any other
 // ══ IN-APP HISTORY (browser Back/Forward stay inside the demo instead of
 // leaving the site, since this is a single real page with JS-toggled
 // sections rather than separate URLs) ═══════════════════════════════════
+// (2026-10-19) Each view now has its OWN URL so Genesys Predictive
+// Engagement can tell views apart (e.g. "viewed Sammy's story" vs. "back on
+// the homepage" — the abandon trigger in Act 1 Beat 1). Scheme reuses the
+// existing deep-link params and is reload-safe on GitHub Pages (no server
+// routing needed, everything is a query string on the same index.html):
+//   home         -> <path>                       (no query)
+//   story        -> ?page=story&story=sammy|luna|noah
+//   other pages  -> ?page=checkout | confirmation | hospital | refer | timeline
+function urlForPage(id) {
+  if (id === 'home') return window.location.pathname;
+  let u = '?page=' + encodeURIComponent(id);
+  if (id === 'story') u += '&story=' + encodeURIComponent(window.demoState.selectedStory || 'sammy');
+  return window.location.pathname + u;
+}
+
+function titleForPage(id) {
+  const base = 'Wishmakers — Grant a Wish';
+  const S = window.demoState && STORIES[window.demoState.selectedStory];
+  const t = {
+    home: base,
+    story: (S ? S.title : 'Story') + ' | Wishmakers',
+    checkout: 'Complete Your Gift | Wishmakers',
+    confirmation: 'Thank You | Wishmakers',
+    hospital: 'Hospital Resources | Wishmakers',
+    refer: 'Refer a Child | Wishmakers',
+    timeline: 'Wish Timeline | Wishmakers'
+  };
+  return t[id] || base;
+}
+
+// Tell Predictive Engagement about the virtual page view. This is a
+// single-page app, so there's no real page load for the tracking snippet to
+// see on view changes. Uses the tracking SDK's documented
+// ac('pageview', {location, title}) when the snippet is present; silently
+// no-ops otherwise. De-duplicated so the same URL isn't sent twice in a row.
+// If Journey Live View shows DOUBLE page views per click, the snippet is
+// already auto-tracking History API changes — set
+// window.MAW_MANUAL_PAGEVIEW = false to turn this off.
+var _lastTrackedUrl = null;
+function trackPageview() {
+  try {
+    var url = window.location.href;
+    if (url === _lastTrackedUrl) return;
+    _lastTrackedUrl = url;
+    if (window.MAW_MANUAL_PAGEVIEW === false) return;
+    if (typeof window.ac === 'function') {
+      window.ac('pageview', { location: url, title: document.title });
+    }
+  } catch (e) { /* tracking must never break the demo */ }
+}
+
 function showPage(id, pushHistory) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
@@ -940,8 +1001,10 @@ function showPage(id, pushHistory) {
   window.scrollTo({top:0});
   refreshStoryDependentText();
   if (pushHistory !== false) {
-    history.pushState({page:id, storyId: window.demoState.selectedStory}, '', '');
+    history.pushState({page:id, storyId: window.demoState.selectedStory}, '', urlForPage(id));
   }
+  document.title = titleForPage(id);
+  trackPageview();
 }
 
 window.addEventListener('popstate', function(e) {
@@ -1179,11 +1242,25 @@ function showCaseUpdateState() {
 // (already marked "active" in the markup) if the param is missing
 // or unrecognized.
 (function routeFromQueryParam() {
-  const validPages = ['home', 'checkout', 'confirmation', 'hospital', 'refer', 'timeline'];
+  // The tracking snippet already records the landing URL itself, so mark it
+  // as "already tracked" to avoid a duplicate page view on first load.
+  _lastTrackedUrl = window.location.href;
+  const validPages = ['home', 'story', 'checkout', 'confirmation', 'hospital', 'refer', 'timeline'];
   const params = new URLSearchParams(window.location.search);
   const requestedPage = params.get('page');
   if (requestedPage && validPages.includes(requestedPage)) {
-    showPage(requestedPage);
+    // (2026-10-19) Story deep links: ?page=story&story=sammy|luna|noah.
+    if (requestedPage === 'story') {
+      const sid = STORIES[params.get('story')] ? params.get('story') : 'sammy';
+      selectStory(sid);
+      renderStoryDetail(sid);
+    }
+    // Don't push a second history entry for the landing URL — just show the
+    // page and stamp the current entry so Back/Forward behave.
+    showPage(requestedPage, false);
+    history.replaceState({page: requestedPage, storyId: window.demoState.selectedStory}, '', window.location.href);
+  } else {
+    document.title = titleForPage('home');
   }
   // Bug fix (2026-09-29): the Checkout page always defaulted to $100
   // regardless of the amount actually chosen in the chat (Sammy's
@@ -1322,7 +1399,7 @@ function showCaseUpdateState() {
       renderIncoming(e.data && e.data.messages);
     });
     Genesys('subscribe', 'MessagingService.restored', function (e) {
-      renderIncoming(e.data && e.data.messages);
+      renderIncoming(e.data && e.data.messages, false); // restored history: no pacing
     });
     Genesys('subscribe', 'MessagingService.typingReceived', showTyping);
     Genesys('subscribe', 'MessagingService.typingTimeout', hideTyping);
@@ -1464,6 +1541,14 @@ function showCaseUpdateState() {
     var b = document.getElementById('video-modal-backdrop');
     return !!(b && b.classList.contains('open'));
   }
+  // (2026-10-21) Jay noticed the chat felt "choppy" — bot messages
+  // (thank-you line, Ava's reply, menus/cards) landed all at once. The same
+  // queue is now used for ALL bot messages, not just the post-video ones:
+  // each gets a short typing indicator (PACE_TYPING ms) and a small gap
+  // (PACE_GAP ms) before the next. Visitor-echo messages and restored
+  // history render immediately. Tune these two numbers to taste.
+  var PACE_TYPING = 750;
+  var PACE_GAP = 350;
   function flushHeld() {
     if (flushing || !heldMessages.length) return;
     flushing = true;
@@ -1475,21 +1560,26 @@ function showCaseUpdateState() {
         hideTyping();
         renderMessage(heldMessages.shift());
         scrollToBottom();
-        setTimeout(next, 500);
-      }, 900);
+        setTimeout(next, PACE_GAP);
+      }, PACE_TYPING);
     })();
   }
   window.mawFlushHeldMessages = flushHeld;
 
-  function renderIncoming(messages) {
+  function renderIncoming(messages, paced) {
     if (!messages) return;
     hideTyping();
-    if (isVideoOpen() || heldMessages.length || flushing) {
-      messages.forEach(function (m) { heldMessages.push(m); });
-      if (!isVideoOpen()) flushHeld();
-      return;
-    }
-    messages.forEach(renderMessage);
+    var pace = paced !== false;
+    messages.forEach(function (m) {
+      // Genesys "Outbound" = platform/bot -> visitor (see renderMessage).
+      var isBot = ((m && m.direction) || '').toLowerCase() === 'outbound';
+      if (isVideoOpen() || (pace && isBot)) {
+        heldMessages.push(m);
+      } else {
+        renderMessage(m);
+      }
+    });
+    if (heldMessages.length && !isVideoOpen()) flushHeld();
     scrollToBottom();
   }
 
