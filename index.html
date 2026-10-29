@@ -79,8 +79,11 @@
   .nav-logo{display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none;}
   /* (2026-10-19) Nav now matches real wish.org: solid blue bar, solid-white logo. */
   .nav-logo img{height:44px;display:block;filter:brightness(0) invert(1);}
-  .nav-logo-divider{width:1px;height:28px;background:rgba(255,255,255,0.4);}
-  .nav-logo-word{font-family:'Droid Serif',serif;font-size:1.1rem;font-weight:700;color:#fff;}
+  /* (2026-10-29) Logo PNG is cropped tight (the swoosh/star sits above the lettering), so the
+     lettering's visual center is ~7.5px below the image box center. Divider + Wishmakers are
+     nudged down to center on the "Make-A-Wish" lettering itself. */
+  .nav-logo-divider{width:1px;height:28px;background:rgba(255,255,255,0.4);transform:translateY(7.5px);}
+  .nav-logo-word{font-family:'Droid Serif',serif;font-size:1.1rem;font-weight:700;color:#fff;line-height:1;transform:translateY(7.5px);}
   .nav-logo .star{color:#fff;}
   .nav-links{display:flex;gap:4px;align-items:center;}
   .nav-link{padding:9px 15px;border-radius:4px;font-size:0.85rem;font-weight:700;color:#fff;cursor:pointer;transition:all .18s;}
@@ -846,8 +849,57 @@
       &#128205; Local Chapter: <a href="#" onclick="return false;">Change Chapter</a>
     </div>
   </div>
-  <div class="footer-bottom">Internal demo build &middot; not for external distribution</div>
+  <div class="footer-bottom"><span id="maw-reset-demo" style="cursor:default;" title="">Internal demo build</span> &middot; not for external distribution</div>
 </footer>
+<script>
+/* (2026-10-29) HIDDEN DEMO RESET — click "Internal demo build" in the footer.
+   Ends/clears the Messenger conversation, wipes cookies + local/session storage +
+   IndexedDB for this site (new Predictive Engagement visitor, segments and
+   frequency caps start fresh), then reloads the clean home URL. Replaces
+   clearing the browser cache by hand between demo takes. */
+(function () {
+  var btn = document.getElementById('maw-reset-demo');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var done = false;
+    function wipeAndReload() {
+      if (done) return; done = true;
+      try { localStorage.clear(); } catch (e) {}
+      try { sessionStorage.clear(); } catch (e) {}
+      try {
+        var host = location.hostname, parts = host.split('.'), paths = ['/', location.pathname.replace(/[^\/]*$/, '')];
+        var domains = [undefined, host, '.' + host, '.' + parts.slice(-2).join('.')];
+        document.cookie.split(';').forEach(function (c) {
+          var name = c.split('=')[0].trim(); if (!name) return;
+          paths.forEach(function (p) { domains.forEach(function (d) {
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=' + p + (d ? '; domain=' + d : '');
+          }); });
+        });
+      } catch (e) {}
+      var finish = function () { location.replace(location.pathname); };
+      try {
+        if (indexedDB && indexedDB.databases) {
+          indexedDB.databases().then(function (dbs) {
+            dbs.forEach(function (d) { if (d.name) indexedDB.deleteDatabase(d.name); });
+            setTimeout(finish, 300);
+          }).catch(finish);
+          setTimeout(finish, 1200);
+          return;
+        }
+      } catch (e) {}
+      finish();
+    }
+    try {
+      if (window.Genesys) {
+        Genesys('command', 'MessagingService.clearConversation', {}, wipeAndReload, wipeAndReload);
+        setTimeout(wipeAndReload, 1500);
+        return;
+      }
+    } catch (e) {}
+    wipeAndReload();
+  });
+})();
+</script>
 
 <script>
 // ══ STATE ═══════════════════════════════════════════════════════
@@ -1428,7 +1480,19 @@ function showCaseUpdateState() {
     // Engagement banner. See the ACTION MAP TRIGGER POINT comment on
     // the impact-stories section above for the segment config this
     // depends on.
-    Genesys('subscribe', 'Journey.qualifiedWebMessagingOffer', function () {
+    Genesys('subscribe', 'Journey.qualifiedWebMessagingOffer', function (e) {
+      // (2026-10-29) Log the payload so we can see whether Genesys sends the
+      // Action Map's offer text; if it does, show it in the bubble, else keep
+      // the hard-coded site text.
+      console.info('[MAW offer] qualifiedWebMessagingOffer payload:', JSON.stringify(e));
+      try {
+        var d = (e && e.data) || e || {};
+        var offerText = d.message || d.text || d.offerText || d.content ||
+          (d.offer && (d.offer.message || d.offer.text)) ||
+          (d.action && (d.action.message || d.action.text));
+        var tEl = document.getElementById('maw-msgr-invite-text');
+        if (tEl && typeof offerText === 'string' && offerText.trim()) tEl.textContent = offerText.trim();
+      } catch (err) { /* fall back to site text */ }
       showInvite();
     });
   }
