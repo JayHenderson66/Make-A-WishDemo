@@ -1542,6 +1542,15 @@ function showCaseUpdateState() {
     els.launcher.classList.remove('has-badge');
     hideInvite();
     if (!started && window.Genesys) {
+      // (2026-10-30) Which journey is this chat starting from? Sent as the entry_point
+      // attribute (for a possible future Architect branch) and used right now by the
+      // referral entry shortcut in renderIncoming().
+      var referPageEl = document.getElementById('page-refer');
+      var fromReferPage = !!(referPageEl && referPageEl.classList.contains('active'));
+      autoReferral = fromReferPage && window.MAW_AUTO_REFERRAL !== false;
+      if (autoReferral) {
+        setTimeout(function () { autoReferral = false; }, 8000); // failsafe: show the card normally if it never matched
+      }
       // Same customAttributes push the native widget used to fire on
       // Messenger.opened — headless mode has no such native event, so
       // "visitor opens our custom panel for the first time" is the
@@ -1552,7 +1561,8 @@ function showCaseUpdateState() {
           customAttributes: {
             gift_amount: window.demoState ? window.demoState.selectedAmount : null,
             story_id: window.demoState ? window.demoState.selectedStory : null,
-            role: window.demoState ? window.demoState.selectedRole : null
+            role: window.demoState ? window.demoState.selectedRole : null,
+            entry_point: fromReferPage ? 'referral' : 'donor'
           }
         }
       });
@@ -1669,6 +1679,29 @@ function showCaseUpdateState() {
   }
   window.mawFlushHeldMessages = flushHeld;
 
+  // (2026-10-30) REFERRAL ENTRY SHORTCUT. Act 1 (donor) and Act 2 (referral) share one
+  // Bot Flow whose first screen is the "donor or referral?" card. A visitor who opens the
+  // chat from the Refer a Child page has already answered that question, so on that page
+  // the site hides the first card and automatically sends the same 'eligibility' choice a
+  // tap would have, taking the flow straight to the role question. No Architect change.
+  // To disable: set window.MAW_AUTO_REFERRAL = false (or remove this block).
+  var autoReferral = false;
+  function findReferralAction(m) {
+    try {
+      var found = null;
+      (m.content || []).forEach(function (c) {
+        var ct = ((c && c.contentType) || '').toLowerCase();
+        var cards = ct === 'carousel' && c.carousel ? (c.carousel.cards || []) : (ct === 'card' && c.card ? [c.card] : []);
+        cards.forEach(function (card) {
+          (card.actions || []).forEach(function (a) {
+            if (!found && (a.payload === 'eligibility' || /qualify for a wish/i.test(a.text || ''))) found = a;
+          });
+        });
+      });
+      return found;
+    } catch (e) { return null; }
+  }
+
   function renderIncoming(messages, paced) {
     if (!messages) return;
     hideTyping();
@@ -1676,6 +1709,15 @@ function showCaseUpdateState() {
     messages.forEach(function (m) {
       // Genesys "Outbound" = platform/bot -> visitor (see renderMessage).
       var isBot = ((m && m.direction) || '').toLowerCase() === 'outbound';
+      if (autoReferral && pace && isBot) {
+        var refAction = findReferralAction(m);
+        if (refAction) {
+          autoReferral = false;
+          console.info('[MAW referral entry] skipped the donor/referral card; sent "eligibility"');
+          sendCardPostback(refAction);
+          return; // do not render the card or its welcome text
+        }
+      }
       if (isVideoOpen() || (pace && isBot)) {
         heldMessages.push(m);
       } else {
