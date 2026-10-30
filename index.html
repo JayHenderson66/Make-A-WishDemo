@@ -1287,6 +1287,20 @@ function submitReferralForm() {
   if (c) c.addEventListener('click', closeReferralModal);
   var b = document.getElementById('referral-modal-backdrop');
   if (b) b.addEventListener('click', function (e) { if (e.target === b) closeReferralModal(); });
+  // US phone mask: digits only, shown as (555) 555-0100 while typing.
+  var ph = document.getElementById('rf-phone');
+  if (ph) {
+    ph.setAttribute('inputmode', 'tel');
+    ph.setAttribute('maxlength', '14');
+    ph.addEventListener('input', function () {
+      var d = ph.value.replace(/\D/g, '').slice(0, 10);
+      var out = d;
+      if (d.length > 6) out = '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+      else if (d.length > 3) out = '(' + d.slice(0, 3) + ') ' + d.slice(3);
+      else if (d.length > 0) out = '(' + d;
+      ph.value = out;
+    });
+  }
 })();
 
 function selectModalAmount(amount) {
@@ -1761,6 +1775,7 @@ function showCaseUpdateState() {
   // tap would have, taking the flow straight to the role question. No Architect change.
   // To disable: set window.MAW_AUTO_REFERRAL = false (or remove this block).
   var autoReferral = false;
+  var suppressEchoUntil = 0;
   function findReferralAction(m) {
     try {
       var found = null;
@@ -1788,10 +1803,17 @@ function showCaseUpdateState() {
         var refAction = findReferralAction(m);
         if (refAction) {
           autoReferral = false;
+          suppressEchoUntil = Date.now() + 6000; // also hide the visitor-side echo of our automatic choice
           console.info('[MAW referral entry] skipped the donor/referral card; sent "eligibility"');
           sendCardPostback(refAction);
           return; // do not render the card or its welcome text
         }
+        // The card's welcome line can arrive as its own message ahead of the card.
+        if (/come true or you know a child/i.test((m && m.text) || '')) return;
+      }
+      if (!isBot && Date.now() < suppressEchoUntil) {
+        suppressEchoUntil = 0; // swallow only the one echo of the automatic choice
+        return;
       }
       if (isVideoOpen() || (pace && isBot)) {
         heldMessages.push(m);
