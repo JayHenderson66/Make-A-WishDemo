@@ -113,6 +113,24 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:now
   .pname{font-size:20px}
   .panel h2{font-size:12.5px}
 }
+/* Tall 16:9 capture window: fill the page area instead of leaving a blank band under the chart —
+   rail and background run to the bottom, panels get roomier type and spacing. */
+@media (min-width:1700px) and (min-height:1000px){
+  .shell{min-height:calc(100vh - 112px)}
+  body{font-size:15px}
+  .main .gutter{padding-block:22px}
+  .encounter{margin-bottom:18px;font-size:13px}
+  .grid,.col{gap:20px}
+  .panel h2{padding:13px 16px;font-size:13px}
+  .pbody{padding:14px 16px}
+  th,td{padding:9px 16px}
+  .person{padding:11px 0}
+  .res li{padding:13px 16px}
+  .task{padding:12px 16px}
+  .note{font-size:13.5px}
+  .rail div{padding:10px 18px}
+  .rail div.on{padding-left:15px}
+}
 @media (max-width:640px){
   .shell{grid-template-columns:minmax(0,1fr)}
   .rail{display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:0}
