@@ -1442,6 +1442,9 @@ function showCaseUpdateState() {
     window.MAWMessenger = {
       open: openPanel,
       close: closePanel,
+      // (2026-10-30) Diagnostic: run MAWMessenger.showInvite() in the console to
+      // check the bubble UI itself, independent of Genesys firing the offer event.
+      showInvite: function () { showInvite(); },
       // Temporary test hook (added 2026-09-29, remove once the real
       // Architect-driven video attachment is wired up and confirmed
       // live) — lets Jay preview the inline-video concept immediately
