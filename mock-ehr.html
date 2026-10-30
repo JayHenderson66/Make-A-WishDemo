@@ -65,7 +65,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
 .main .gutter{padding-block:14px}
 .encounter{display:flex;flex-wrap:wrap;gap:4px 18px;color:var(--muted);font-size:12px;margin-bottom:12px}
 .encounter strong{color:var(--ink)}
-.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .col{display:grid;gap:14px;align-content:start;min-width:0}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:4px;min-width:0}
 .panel h2{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--chrome);padding:9px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
@@ -99,8 +99,19 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:now
 .res li.feature{background:#f3f8fb}
 .foot{color:var(--muted);font-size:11px;padding-block:14px;text-align:center}
 
-@media (max-width:900px){
+@media (max-width:1100px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
   .grid{grid-template-columns:minmax(0,1fr)}
+}
+/* Tuned for a 1920x1080 page area (screen capture): three columns, slightly larger type, wider gutters,
+   Psychosocial Note + Refer panel together in the first column so the whole story is above the fold. */
+@media (min-width:1700px){
+  body{font-size:14px}
+  .gutter{padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+  .pname{font-size:20px}
+  .panel h2{font-size:12.5px}
 }
 @media (max-width:640px){
   .shell{grid-template-columns:minmax(0,1fr)}
@@ -167,6 +178,43 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:now
       <div class="grid">
         <div class="col">
           <section class="panel">
+            <h2>Psychosocial Note <em>most recent</em></h2>
+            <div class="pbody note">
+              <div class="meta">Social Work Follow-Up · 10/16/2026 14:20 · Maria Torres, LCSW · Signed</div>
+              <p>Met with parents (Elena and Carlos Alvarez) in clinic during vincristine infusion. Pt tolerating maintenance well and has returned to school two days a week.</p>
+              <p>Discussed wish-granting organizations as a family support resource. <strong>Parents are aware of and agreeable to a Make-A-Wish referral</strong> and prefer that the primary RN (R. Kim) initiate it. Mother confirms <strong>no prior wish from any wish-granting organization.</strong></p>
+              <p>Pt's interests per parents: sea turtles, drawing, the ocean. Mother prefers Spanish for written materials; verbal communication in English is fine.</p>
+              <p><strong>Plan:</strong> RN to submit referral. SW to follow up with family at next clinic visit.</p>
+            </div>
+            <div class="task">
+              <span class="box" aria-hidden="true"></span>
+              <span><strong>Open task:</strong> Submit Make-A-Wish referral · Assigned to R. Kim, RN · Due 10/20/2026</span>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Family Support Resources <em>Hem/Onc program</em></h2>
+            <ul class="res">
+              <li><div><div class="what">Child Life Program</div><div class="why">Procedure prep, sibling support, school re-entry</div></div><a class="go" href="#" onclick="return false">Open</a></li>
+              <li><div><div class="what">Family Lodging & Meals</div><div class="why">Overnight stays near the hospital for families traveling for treatment</div></div><a class="go" href="#" onclick="return false">Open</a></li>
+              <li class="feature"><div><div class="what">Make-A-Wish® — Refer a Child</div><div class="why">Wishes for children ages 2½–17 with a critical illness. Refer with the family's knowledge.</div></div><a class="go" id="refer-link" href="https://wish.org/refer-a-child">Refer</a></li>
+              <li><div><div class="what">Financial Counseling</div><div class="why">Insurance navigation and assistance programs</div></div><a class="go" href="#" onclick="return false">Open</a></li>
+            </ul>
+          </section>
+
+          <section class="panel">
+            <h2>Care Team</h2>
+            <div class="pbody">
+              <div class="person"><span>Daniel Okafor, MD</span><span class="role">Attending, Hem/Onc</span></div>
+              <div class="person"><span>Rachel Kim, RN, BSN</span><span class="role">Primary oncology nurse</span></div>
+              <div class="person"><span>Maria Torres, LCSW</span><span class="role">Social work</span></div>
+              <div class="person"><span>Jenna Brooks, CCLS</span><span class="role">Child life specialist</span></div>
+            </div>
+          </section>
+
+        </div>
+        <div class="col">
+          <section class="panel">
             <h2>Problem List <em>3 active</em></h2>
             <div class="tbl-wrap"><table>
               <thead><tr><th>Problem</th><th>ICD-10-CM</th><th>Noted</th></tr></thead>
@@ -192,6 +240,21 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:now
           </section>
 
           <section class="panel">
+            <h2>Recent Results <em>CBC w/ diff · 10/20/2026 08:12</em></h2>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Test</th><th>Result</th><th>Ref range</th></tr></thead>
+              <tbody>
+                <tr><td>WBC</td><td class="num lo">3.2 L</td><td class="num">4.5–13.5 K/µL</td></tr>
+                <tr><td>ANC</td><td class="num lo">1,450 L</td><td class="num">1,500–8,000 /µL</td></tr>
+                <tr><td>Hemoglobin</td><td class="num lo">10.8 L</td><td class="num">11.5–15.5 g/dL</td></tr>
+                <tr><td>Platelets</td><td class="num">182</td><td class="num">150–450 K/µL</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+
+        </div>
+        <div class="col">
+          <section class="panel">
             <h2>Active Medications <em>dosing per protocol</em></h2>
             <div class="tbl-wrap"><table>
               <thead><tr><th>Medication</th><th>Route</th><th>Frequency</th></tr></thead>
@@ -207,31 +270,6 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:now
           </section>
 
           <section class="panel">
-            <h2>Recent Results <em>CBC w/ diff · 10/20/2026 08:12</em></h2>
-            <div class="tbl-wrap"><table>
-              <thead><tr><th>Test</th><th>Result</th><th>Ref range</th></tr></thead>
-              <tbody>
-                <tr><td>WBC</td><td class="num lo">3.2 L</td><td class="num">4.5–13.5 K/µL</td></tr>
-                <tr><td>ANC</td><td class="num lo">1,450 L</td><td class="num">1,500–8,000 /µL</td></tr>
-                <tr><td>Hemoglobin</td><td class="num lo">10.8 L</td><td class="num">11.5–15.5 g/dL</td></tr>
-                <tr><td>Platelets</td><td class="num">182</td><td class="num">150–450 K/µL</td></tr>
-              </tbody>
-            </table></div>
-          </section>
-        </div>
-
-        <div class="col">
-          <section class="panel">
-            <h2>Care Team</h2>
-            <div class="pbody">
-              <div class="person"><span>Daniel Okafor, MD</span><span class="role">Attending, Hem/Onc</span></div>
-              <div class="person"><span>Rachel Kim, RN, BSN</span><span class="role">Primary oncology nurse</span></div>
-              <div class="person"><span>Maria Torres, LCSW</span><span class="role">Social work</span></div>
-              <div class="person"><span>Jenna Brooks, CCLS</span><span class="role">Child life specialist</span></div>
-            </div>
-          </section>
-
-          <section class="panel">
             <h2>Guardians & Contacts</h2>
             <div class="pbody">
               <div class="person"><span>Elena Alvarez</span><span class="role">Mother · legal guardian · (949) 555-0142</span></div>
@@ -240,30 +278,6 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:now
             </div>
           </section>
 
-          <section class="panel">
-            <h2>Psychosocial Note <em>most recent</em></h2>
-            <div class="pbody note">
-              <div class="meta">Social Work Follow-Up · 10/16/2026 14:20 · Maria Torres, LCSW · Signed</div>
-              <p>Met with parents (Elena and Carlos Alvarez) in clinic during vincristine infusion. Pt tolerating maintenance well and has returned to school two days a week.</p>
-              <p>Discussed wish-granting organizations as a family support resource. <strong>Parents are aware of and agreeable to a Make-A-Wish referral</strong> and prefer that the primary RN (R. Kim) initiate it. Mother confirms <strong>no prior wish from any wish-granting organization.</strong></p>
-              <p>Pt's interests per parents: sea turtles, drawing, the ocean. Mother prefers Spanish for written materials; verbal communication in English is fine.</p>
-              <p><strong>Plan:</strong> RN to submit referral. SW to follow up with family at next clinic visit.</p>
-            </div>
-            <div class="task">
-              <span class="box" aria-hidden="true"></span>
-              <span><strong>Open task:</strong> Submit Make-A-Wish referral · Assigned to R. Kim, RN · Due 10/20/2026</span>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h2>Family Support Resources <em>Hem/Onc program</em></h2>
-            <ul class="res">
-              <li><div><div class="what">Child Life Program</div><div class="why">Procedure prep, sibling support, school re-entry</div></div><a class="go" href="#" onclick="return false">Open</a></li>
-              <li><div><div class="what">Family Lodging & Meals</div><div class="why">Overnight stays near the hospital for families traveling for treatment</div></div><a class="go" href="#" onclick="return false">Open</a></li>
-              <li class="feature"><div><div class="what">Make-A-Wish® — Refer a Child</div><div class="why">Wishes for children ages 2½–17 with a critical illness. Refer with the family's knowledge.</div></div><a class="go" id="refer-link" href="https://wish.org/refer-a-child">Refer</a></li>
-              <li><div><div class="what">Financial Counseling</div><div class="why">Insurance navigation and assistance programs</div></div><a class="go" href="#" onclick="return false">Open</a></li>
-            </ul>
-          </section>
         </div>
       </div>
     </div>
