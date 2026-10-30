@@ -78,7 +78,9 @@
      there per Jay's call, to avoid showing the same logo twice). */
   .nav-logo{display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none;}
   /* (2026-10-19) Nav now matches real wish.org: solid blue bar, solid-white logo. */
-  .nav-logo img{height:44px;display:block;filter:brightness(0) invert(1);}
+  /* (2026-10-30) Logo is now a pre-whitened, pre-sized PNG set (1x/2x/3x via srcset) built from
+     the high-res white-on-blue source — crisper than scaling + CSS-filtering one raster. */
+  .nav-logo img{height:44px;width:auto;display:block;}
   /* (2026-10-29) Logo PNG is cropped tight (the swoosh/star sits above the lettering), so the
      lettering's visual center is ~7.5px below the image box center. Divider + Wishmakers are
      nudged down to center on the "Make-A-Wish" lettering itself. */
@@ -172,7 +174,12 @@
   .story-switch-row{display:flex;gap:16px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:24px;}
   .story-switch-card{flex:1;min-width:180px;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:all .2s;}
   .story-switch-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-sm);}
-  .story-switch-visual{height:90px;}
+  /* (2026-10-30) Taller strip + per-child focal point so heads/faces aren't cropped
+     (Noah's head was cut off at 90px/center; Luna's face was cut at the eyes). */
+  .story-switch-visual{height:150px;}
+  .story-switch-visual.sv-noah{background-position:center 12%;}
+  .story-switch-visual.sv-luna{background-position:center 35%;}
+  .story-switch-visual.sv-sammy{background-position:center 25%;}
   .story-switch-name{padding:10px 12px;font-size:0.82rem;font-weight:700;color:var(--brand-blue-dark);}
 
   /* PAGE HEADER (reused across sub-pages) */
@@ -498,7 +505,7 @@
 <nav class="nav">
   <div class="nav-inner">
     <div class="nav-logo" onclick="showPage('home')">
-      <img src="images/maw_logo_transparent.png" alt="Make-A-Wish">
+      <img src="images/maw_logo_nav_white_1x.png" srcset="images/maw_logo_nav_white_1x.png 1x, images/maw_logo_nav_white_2x.png 2x, images/maw_logo_nav_white_3x.png 3x" width="211" height="44" alt="Make-A-Wish">
       <span class="nav-logo-divider"></span>
       <span class="nav-logo-word"><span class="star">&#10022;</span> Wishmakers</span>
     </div>
