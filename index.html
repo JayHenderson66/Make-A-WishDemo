@@ -203,6 +203,14 @@
   .checkout-modal-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.55);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;}
   .checkout-modal-backdrop.open{display:flex;}
   .checkout-modal-inner{max-width:440px;width:100%;max-height:90vh;overflow-y:auto;position:relative;}
+  /* Referral form modal fields (2026-10-30) */
+  .rf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin:16px 0 14px;}
+  .rf-field{display:flex;flex-direction:column;gap:4px;font-size:0.76rem;font-weight:700;color:var(--text-mid);}
+  .rf-field.rf-wide{grid-column:1 / -1;}
+  .rf-field input[type=text]{font-family:'Lato',sans-serif;font-size:0.92rem;font-weight:400;color:var(--text-dark);padding:9px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;}
+  .rf-field input[type=text]:focus{outline:2px solid var(--brand-blue);outline-offset:0;}
+  .rf-check{display:flex;gap:8px;align-items:flex-start;font-size:0.84rem;color:var(--text-dark);margin-bottom:16px;}
+  .rf-check input{margin-top:3px;}
   .checkout-modal-close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.5rem;line-height:1;color:var(--text-light);cursor:pointer;padding:4px;}
   .checkout-modal-close:hover{color:var(--text-dark);}
   .checkout-modal-headline{font-family:'Droid Serif',serif;color:var(--brand-blue-dark);font-size:1.25rem;margin-bottom:6px;padding-right:20px;}
@@ -760,6 +768,33 @@
   </div>
 </div><!-- /checkout-modal-backdrop -->
 
+<!-- ══════════════════════════════════════════════
+     REFERRAL FORM MODAL (Act 2, Beat 2 → 3) — added 2026-10-30.
+     Opens when the visitor clicks "Continue" on the "Continue Your Referral"
+     chat card (after AVA confirms eligibility). Shortened, partly pre-filled form
+     (age + diagnosis come from what the visitor typed in the chat); Submit goes to
+     the "What Happens Next" timeline page in this same window. Reuses the checkout
+     modal's overlay/card styling; own element IDs (rf-*).
+     ══════════════════════════════════════════════ -->
+<div class="checkout-modal-backdrop" id="referral-modal-backdrop">
+  <div class="checkout-card checkout-modal-inner" style="max-width:520px;">
+    <button class="checkout-modal-close" id="referral-modal-close" aria-label="Close">&times;</button>
+    <h2 class="checkout-modal-headline">Start the referral</h2>
+    <p class="checkout-modal-subline">You've already told us the essentials in chat, so we filled those in. Just confirm a few details.</p>
+    <div class="rf-grid">
+      <label class="rf-field"><span>Child's first name</span><input type="text" id="rf-child" value="Sophie"></label>
+      <label class="rf-field"><span>Age</span><input type="text" id="rf-age" value="7"></label>
+      <label class="rf-field rf-wide"><span>Diagnosis (from chat)</span><input type="text" id="rf-dx" value="Leukemia"></label>
+      <label class="rf-field"><span>Referred by</span><input type="text" id="rf-by" value="Rachel Kim, RN"></label>
+      <label class="rf-field"><span>Hospital</span><input type="text" id="rf-hospital" value="Children's Hospital"></label>
+      <label class="rf-field"><span>Parent/guardian name</span><input type="text" id="rf-guardian" placeholder="e.g. Elena Alvarez"></label>
+      <label class="rf-field"><span>Parent/guardian phone</span><input type="text" id="rf-phone" placeholder="(555) 555-0100"></label>
+    </div>
+    <label class="rf-check"><input type="checkbox" id="rf-aware"> The family is aware of and agrees to this referral</label>
+    <button class="co-continue-btn" id="referral-submit-btn" onclick="submitReferralForm()">Submit referral</button>
+  </div>
+</div><!-- /referral-modal-backdrop -->
+
 <div class="video-modal-backdrop" id="video-modal-backdrop">
   <div class="video-modal-inner">
     <button class="video-modal-close" id="video-modal-close" aria-label="Close">&times;</button>
@@ -1215,6 +1250,45 @@ function closeCheckoutModal() {
   document.getElementById('checkout-modal-backdrop').classList.remove('open');
 }
 
+// ══ REFERRAL FORM MODAL (2026-10-30) ═══════════════════════════
+// Opened from the "Continue Your Referral" chat card. Age/diagnosis are taken from what the
+// visitor typed in the chat (see captureReferralAnswers), and stay editable.
+window.demoState.referralAnswers = window.demoState.referralAnswers || { age: null, diagnosis: null };
+
+function captureReferralAnswers(text) {
+  try {
+    var t = (text || '').trim();
+    if (!t) return;
+    var ra = window.demoState.referralAnswers;
+    if (/^\d{1,2}$/.test(t)) { ra.age = t; return; }
+    if (/^(yes|no|y|n|yeah|yep|nope|ok|okay)\.?$/i.test(t)) return;
+    if (/leuk|leak|leek/i.test(t)) { ra.diagnosis = 'Leukemia'; return; }
+    if (!ra.diagnosis && t.length > 2 && t.length < 80) ra.diagnosis = t.charAt(0).toUpperCase() + t.slice(1);
+  } catch (e) {}
+}
+
+function openReferralModal() {
+  var ra = window.demoState.referralAnswers || {};
+  if (ra.age) document.getElementById('rf-age').value = ra.age;
+  if (ra.diagnosis) document.getElementById('rf-dx').value = ra.diagnosis;
+  document.getElementById('referral-modal-backdrop').classList.add('open');
+}
+
+function closeReferralModal() {
+  document.getElementById('referral-modal-backdrop').classList.remove('open');
+}
+
+function submitReferralForm() {
+  closeReferralModal();
+  showPage('timeline'); // same window; chat stays open
+}
+(function () {
+  var c = document.getElementById('referral-modal-close');
+  if (c) c.addEventListener('click', closeReferralModal);
+  var b = document.getElementById('referral-modal-backdrop');
+  if (b) b.addEventListener('click', function (e) { if (e.target === b) closeReferralModal(); });
+})();
+
 function selectModalAmount(amount) {
   window.demoState.selectedAmount = amount;
   document.querySelectorAll('#co-modal-amount-row .co-amount-btn').forEach(b => {
@@ -1611,6 +1685,7 @@ function showCaseUpdateState() {
     var text = els.input.value.trim();
     if (!text || !window.Genesys) return;
     els.input.value = '';
+    if (typeof captureReferralAnswers === 'function') captureReferralAnswers(text);
     Genesys('command', 'MessagingService.sendMessage', { message: text });
   }
 
@@ -1883,6 +1958,15 @@ function showCaseUpdateState() {
       btn.addEventListener('click', function () {
         if (!(action.type === 'Link' && action.url)) {
           cardButtons.forEach(function (b) { b.disabled = true; });
+        }
+        // (2026-10-30) "Continue Your Referral" card (Act 2, after AVA confirms eligibility):
+        // open the shortened referral form in a window over this page instead of a new tab.
+        // Works for either button type; a Postback button also tells the Bot Flow to move on
+        // (which stops the "Sorry, I didn't receive any input" reprompt loop).
+        if (card.title && /continue your referral/i.test(card.title)) {
+          openReferralModal();
+          if (action.type !== 'Link') sendCardPostback(action);
+          return;
         }
         if (action.type === 'Link' && action.url) {
           // (2026-09-30) Previously always opened in a new tab via
