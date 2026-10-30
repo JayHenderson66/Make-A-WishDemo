@@ -418,7 +418,9 @@
         document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=' + p + (d ? '; domain=' + d : '');
       }); });
     });
-    try { if (indexedDB && indexedDB.databases) indexedDB.databases().then(function (dbs) { dbs.forEach(function (d) { if (d.name) indexedDB.deleteDatabase(d.name); }); }); } catch (e) {}
+    // (IndexedDB is deliberately NOT touched here: its delete is async and could
+    // race with, and wipe, databases the Genesys bootstrap creates right after.
+    // The footer reset already clears IndexedDB before navigating here.)
     history.replaceState(null, '', location.pathname);
     console.info('[MAW reset] stored visitor state cleared before Genesys bootstrap');
   } catch (e) {}
@@ -452,7 +454,7 @@
      ══════════════════════════════════════════════ -->
 <div class="maw-msgr-invite" id="maw-msgr-invite">
   <button class="invite-close" id="maw-msgr-invite-close" aria-label="Dismiss">&times;</button>
-  <p id="maw-msgr-invite-text">You're the kind of person who could give Sammy hope. See what your gift could do:</p>
+  <p id="maw-msgr-invite-text">Still thinking about Sammy? Ava can show what your gift could do.</p>
   <div class="invite-row">
     <button class="invite-dismiss" id="maw-msgr-invite-dismiss">Not now</button>
     <button class="invite-accept" id="maw-msgr-invite-accept">Let's see</button>
@@ -1138,7 +1140,7 @@ function openChatForCurrentStory() {
 function updateInviteText() {
   const s = STORIES[window.demoState.selectedStory] || STORIES.sammy;
   const el = document.getElementById('maw-msgr-invite-text');
-  if (el) el.textContent = `You're the kind of person who could give ${s.name} hope. See what your gift could do.`;
+  if (el) el.textContent = `Still thinking about ${s.name}? Ava can show what your gift could do.`;
 }
 
 function refreshStoryDependentText() {
