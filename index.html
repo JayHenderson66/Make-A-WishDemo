@@ -399,6 +399,31 @@
      Messenger Headless Mode SDK docs and the "Configure Messenger"
      resource-center article — not guessed.
      ============================================================ -->
+<script>
+/* (2026-10-30) PRE-BOOTSTRAP RESET. If the URL has ?reset=1, wipe all stored
+   visitor identity BEFORE the Genesys bootstrap loads, so it can't write its
+   old state back during unload and starts as a brand-new visitor. Then strip
+   the param so Predictive Engagement never sees it as a page view. */
+(function () {
+  try {
+    if (!/[?&]reset=1(&|$)/.test(location.search)) return;
+    try { localStorage.clear(); } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
+    var host = location.hostname, parts = host.split('.');
+    var paths = ['/', location.pathname.replace(/[^\/]*$/, '')];
+    var domains = [undefined, host, '.' + host, '.' + parts.slice(-2).join('.')];
+    document.cookie.split(';').forEach(function (c) {
+      var name = c.split('=')[0].trim(); if (!name) return;
+      paths.forEach(function (p) { domains.forEach(function (d) {
+        document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=' + p + (d ? '; domain=' + d : '');
+      }); });
+    });
+    try { if (indexedDB && indexedDB.databases) indexedDB.databases().then(function (dbs) { dbs.forEach(function (d) { if (d.name) indexedDB.deleteDatabase(d.name); }); }); } catch (e) {}
+    history.replaceState(null, '', location.pathname);
+    console.info('[MAW reset] stored visitor state cleared before Genesys bootstrap');
+  } catch (e) {}
+})();
+</script>
 <script type="text/javascript" charset="utf-8">
   (function (g, e, n, es, ys) {
     g['_genesysJs'] = e;
@@ -876,7 +901,9 @@
           }); });
         });
       } catch (e) {}
-      var finish = function () { location.replace(location.pathname); };
+      // ?reset=1 makes the next load wipe everything again BEFORE Genesys boots
+      // (the SDK can re-write its state while this page unloads).
+      var finish = function () { location.replace(location.pathname + '?reset=1'); };
       try {
         if (indexedDB && indexedDB.databases) {
           indexedDB.databases().then(function (dbs) {
