@@ -1,0 +1,296 @@
+<title>Sophie Alvarez Chart</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: clinical workstation — app bar, patient banner, activity rail, two-column chart summary.
+   Deliberately single light theme: EHR screens are light, and this is a screen-capture asset. */
+:root{
+  color-scheme: light;
+  --bg:#eef2f5;        /* workspace ground, cool grey biased to the blue */
+  --surface:#ffffff;
+  --ink:#1c2a36;
+  --muted:#5b6b78;
+  --line:#d5dde3;
+  --chrome:#1f4e6b;    /* app bar */
+  --chrome-2:#2b6283;
+  --banner:#e3edf3;    /* patient banner */
+  --accent:#1f6f9f;    /* links, active tab */
+  --warn:#9a5b00; --warn-bg:#fff4e0;
+  --ok:#2c6e3f; --ok-bg:#e6f3ea;
+  --flag:#a2342a; --flag-bg:#fbe9e7;
+  --sans:"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 var(--sans)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--chrome)}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* App bar */
+.appbar{background:var(--chrome);color:#fff}
+.appbar .gutter{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding-block:8px}
+.brand{font-weight:700;letter-spacing:.02em}
+.brand small{font-weight:400;opacity:.8;margin-left:6px}
+.appnav{display:flex;gap:2px;flex-wrap:wrap}
+.appnav span{padding:3px 10px;border-radius:3px;opacity:.85}
+.appnav span.on{background:var(--chrome-2);opacity:1}
+.whoami{margin-left:auto;font-size:12px;opacity:.9}
+
+/* Patient banner */
+.pbanner{background:var(--banner);border-bottom:1px solid var(--line)}
+.pbanner .gutter{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;padding-block:12px}
+.pid{display:flex;align-items:center;gap:12px}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--chrome-2);color:#fff;display:grid;place-items:center;font-weight:600}
+.pname{font-size:18px;font-weight:700;line-height:1.2}
+.psub{color:var(--muted);font-size:12px}
+.facts{display:flex;flex-wrap:wrap;gap:6px 24px}
+.fact{min-width:0}
+.fact b{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.fact span{font-weight:500}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:10px}
+.chip.flag{background:var(--flag-bg);color:var(--flag)}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+
+/* Body */
+.shell{display:grid;grid-template-columns:168px 1fr;gap:0;min-height:70vh}
+.rail{background:var(--surface);border-right:1px solid var(--line);padding:10px 0}
+.rail div{padding:7px 16px;color:var(--muted);font-weight:500}
+.rail div.on{color:var(--accent);background:#eaf3f9;border-left:3px solid var(--accent);padding-left:13px}
+.main{min-width:0}
+.main .gutter{padding-block:14px}
+.encounter{display:flex;flex-wrap:wrap;gap:4px 18px;color:var(--muted);font-size:12px;margin-bottom:12px}
+.encounter strong{color:var(--ink)}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+.col{display:grid;gap:14px;align-content:start;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:4px;min-width:0}
+.panel h2{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--chrome);padding:9px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.panel h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400}
+.pbody{padding:10px 12px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:6px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:#f6f8fa}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lo{color:var(--flag);font-weight:600}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:5px 14px}
+.dl dt{color:var(--muted)}
+.dl dd{margin:0;font-weight:500}
+.person{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.person:last-child{border-bottom:0}
+.person .role{color:var(--muted);font-size:12px}
+.note{font-size:12.5px}
+.note .meta{color:var(--muted);font-size:11.5px;margin-bottom:6px}
+.note p{margin:0 0 6px}
+.task{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;background:var(--warn-bg);border-top:1px solid var(--line)}
+.box{width:14px;height:14px;border:1.5px solid var(--warn);border-radius:2px;flex:none;margin-top:2px}
+.res{list-style:none;margin:0;padding:0}
+.res li{display:flex;justify-content:space-between;gap:12px;padding:9px 12px;border-bottom:1px solid var(--line)}
+.res li:last-child{border-bottom:0}
+.res .what{font-weight:600}
+.res .why{color:var(--muted);font-size:12px}
+.res a.go{white-space:nowrap;font-weight:600;align-self:center;text-decoration:none;border:1px solid var(--accent);padding:4px 10px;border-radius:3px}
+.res a.go:hover{background:var(--accent);color:#fff}
+.res li.feature{background:#f3f8fb}
+.foot{color:var(--muted);font-size:11px;padding-block:14px;text-align:center}
+
+@media (max-width:900px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .rail{display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:0}
+  .rail div{white-space:nowrap}
+  .rail div.on{border-left:0;border-bottom:3px solid var(--accent);padding-left:16px}
+  .whoami{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="appbar">
+  <div class="gutter">
+    <div class="brand">Brightwater Children's<small>ClinView</small></div>
+    <nav class="appnav" aria-label="Workspace">
+      <span>Schedule</span><span>In Basket</span><span class="on">Patient Chart</span><span>Reports</span>
+    </nav>
+    <div class="whoami">Rachel Kim, RN · Pediatric Hem/Onc Clinic · 10/20/2026 09:41</div>
+  </div>
+</header>
+
+<section class="pbanner" aria-label="Patient banner">
+  <div class="gutter">
+    <div class="pid">
+      <div class="avatar" aria-hidden="true">SA</div>
+      <div>
+        <div class="pname">Alvarez, Sophie M.</div>
+        <div class="psub">Female · 7 y 7 m · DOB 03/14/2019</div>
+      </div>
+    </div>
+    <div class="facts">
+      <div class="fact"><b>MRN</b><span class="mono">004827193</span></div>
+      <div class="fact"><b>Attending</b><span>Daniel Okafor, MD</span></div>
+      <div class="fact"><b>Allergies</b><span class="chip ok">NKDA</span></div>
+      <div class="fact"><b>Wt / Ht / BSA</b><span class="mono">23.1 kg · 122 cm · 0.89 m²</span></div>
+      <div class="fact"><b>Code status</b><span>Full code</span></div>
+      <div class="fact"><b>Precautions</b><span class="chip warn">Neutropenic — standard</span></div>
+      <div class="fact"><b>Language</b><span>English · Spanish (written, mother)</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="shell">
+  <nav class="rail" aria-label="Chart activities">
+    <div class="on">Summary</div>
+    <div>Chart Review</div>
+    <div>Results</div>
+    <div>Medications</div>
+    <div>Notes</div>
+    <div>Care Team</div>
+    <div>Treatment Plan</div>
+    <div>Referrals</div>
+  </nav>
+
+  <main class="main">
+    <div class="gutter">
+      <div class="encounter">
+        <span><strong>Encounter:</strong> Outpatient clinic visit</span>
+        <span><strong>Dept:</strong> Pediatric Hematology/Oncology</span>
+        <span><strong>Visit reason:</strong> Maintenance therapy, Cycle 1 Day 15</span>
+        <span><strong>Payer:</strong> Commercial</span>
+      </div>
+
+      <div class="grid">
+        <div class="col">
+          <section class="panel">
+            <h2>Problem List <em>3 active</em></h2>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Problem</th><th>ICD-10-CM</th><th>Noted</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Precursor B-cell acute lymphoblastic leukemia, in remission</strong><br><span class="psub">Standard risk · on active therapy</span></td><td class="num">C91.01</td><td class="num">02/18/2026</td></tr>
+                <tr><td>Chemotherapy-induced nausea</td><td class="num">R11.0</td><td class="num">03/02/2026</td></tr>
+                <tr><td>Central venous port in place</td><td class="num">Z95.828</td><td class="num">02/20/2026</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+
+          <section class="panel">
+            <h2>Treatment Plan <em>Pediatric ALL — standard risk</em></h2>
+            <div class="pbody">
+              <dl class="dl">
+                <dt>Diagnosed</dt><dd>02/18/2026 (8 months)</dd>
+                <dt>Current phase</dt><dd>Maintenance · Cycle 1, Day 15</dd>
+                <dt>Completed</dt><dd>Induction · Consolidation · Interim Maintenance I & II · Delayed Intensification</dd>
+                <dt>Response</dt><dd><span class="chip ok">End-of-induction MRD negative</span></dd>
+                <dt>Next visit</dt><dd>11/03/2026 · labs + clinic</dd>
+              </dl>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Active Medications <em>dosing per protocol</em></h2>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Medication</th><th>Route</th><th>Frequency</th></tr></thead>
+              <tbody>
+                <tr><td>Mercaptopurine</td><td>PO</td><td>Daily</td></tr>
+                <tr><td>Methotrexate</td><td>PO</td><td>Weekly</td></tr>
+                <tr><td>Vincristine</td><td>IV (port)</td><td>Every 4 weeks</td></tr>
+                <tr><td>Dexamethasone</td><td>PO</td><td>5-day pulse every 4 weeks</td></tr>
+                <tr><td>Sulfamethoxazole-trimethoprim</td><td>PO</td><td>2 consecutive days/week (PJP prophylaxis)</td></tr>
+                <tr><td>Ondansetron</td><td>PO</td><td>Every 8 h as needed</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+
+          <section class="panel">
+            <h2>Recent Results <em>CBC w/ diff · 10/20/2026 08:12</em></h2>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Test</th><th>Result</th><th>Ref range</th></tr></thead>
+              <tbody>
+                <tr><td>WBC</td><td class="num lo">3.2 L</td><td class="num">4.5–13.5 K/µL</td></tr>
+                <tr><td>ANC</td><td class="num lo">1,450 L</td><td class="num">1,500–8,000 /µL</td></tr>
+                <tr><td>Hemoglobin</td><td class="num lo">10.8 L</td><td class="num">11.5–15.5 g/dL</td></tr>
+                <tr><td>Platelets</td><td class="num">182</td><td class="num">150–450 K/µL</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+        </div>
+
+        <div class="col">
+          <section class="panel">
+            <h2>Care Team</h2>
+            <div class="pbody">
+              <div class="person"><span>Daniel Okafor, MD</span><span class="role">Attending, Hem/Onc</span></div>
+              <div class="person"><span>Rachel Kim, RN, BSN</span><span class="role">Primary oncology nurse</span></div>
+              <div class="person"><span>Maria Torres, LCSW</span><span class="role">Social work</span></div>
+              <div class="person"><span>Jenna Brooks, CCLS</span><span class="role">Child life specialist</span></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Guardians & Contacts</h2>
+            <div class="pbody">
+              <div class="person"><span>Elena Alvarez</span><span class="role">Mother · legal guardian · (949) 555-0142</span></div>
+              <div class="person"><span>Carlos Alvarez</span><span class="role">Father · legal guardian · (949) 555-0178</span></div>
+              <div class="person"><span>Home</span><span class="role">Irvine, CA 92618 · Orange County</span></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Psychosocial Note <em>most recent</em></h2>
+            <div class="pbody note">
+              <div class="meta">Social Work Follow-Up · 10/16/2026 14:20 · Maria Torres, LCSW · Signed</div>
+              <p>Met with parents (Elena and Carlos Alvarez) in clinic during vincristine infusion. Pt tolerating maintenance well and has returned to school two days a week.</p>
+              <p>Discussed wish-granting organizations as a family support resource. <strong>Parents are aware of and agreeable to a Make-A-Wish referral</strong> and prefer that the primary RN (R. Kim) initiate it. Mother confirms <strong>no prior wish from any wish-granting organization.</strong></p>
+              <p>Pt's interests per parents: sea turtles, drawing, the ocean. Mother prefers Spanish for written materials; verbal communication in English is fine.</p>
+              <p><strong>Plan:</strong> RN to submit referral. SW to follow up with family at next clinic visit.</p>
+            </div>
+            <div class="task">
+              <span class="box" aria-hidden="true"></span>
+              <span><strong>Open task:</strong> Submit Make-A-Wish referral · Assigned to R. Kim, RN · Due 10/20/2026</span>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Family Support Resources <em>Hem/Onc program</em></h2>
+            <ul class="res">
+              <li><div><div class="what">Child Life Program</div><div class="why">Procedure prep, sibling support, school re-entry</div></div><a class="go" href="#" onclick="return false">Open</a></li>
+              <li><div><div class="what">Family Lodging & Meals</div><div class="why">Overnight stays near the hospital for families traveling for treatment</div></div><a class="go" href="#" onclick="return false">Open</a></li>
+              <li class="feature"><div><div class="what">Make-A-Wish® — Refer a Child</div><div class="why">Wishes for children ages 2½–17 with a critical illness. Refer with the family's knowledge.</div></div><a class="go" id="refer-link" href="https://wish.org/refer-a-child">Refer</a></li>
+              <li><div><div class="what">Financial Counseling</div><div class="why">Insurance navigation and assistance programs</div></div><a class="go" href="#" onclick="return false">Open</a></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </div>
+    <div class="foot gutter">Simulated record · fictional patient and facility · for demonstration only</div>
+  </main>
+</div>
+
+<script>
+/* Where the "Refer" button goes.
+   DEMO_SITE = the Wishmakers demo site's index.html URL (GitHub Pages). The button lands on its
+   Refer a Child view via the site's own deep link (?page=refer), as a real page load, so the
+   Messenger/Journey tracking records the landing URL with the UTM tags below.
+   Running this file locally, you can override without editing: mock-ehr.html?refer=https://your-site/index.html
+   UTM tags are used because a local file sends no referrer, so the segment must key off the URL. */
+(function(){
+  var DEMO_SITE = "https://jayhenderson66.github.io/Make-A-WishDemo/";
+  var REFER_BASE = DEMO_SITE;
+  var UTM = {utm_source:"brightwater_childrens", utm_medium:"referral", utm_campaign:"hemonc_family_resources", utm_content:"ehr_resource_panel"};
+  try {
+    var q = new URLSearchParams(location.search).get("refer");
+    if (q && /^https?:\/\//i.test(q)) REFER_BASE = q;
+  } catch (e) {}
+  try {
+    var u = new URL(REFER_BASE);
+    if (!/wish\.org$/i.test(u.hostname)) u.searchParams.set("page", "refer");
+    Object.keys(UTM).forEach(function(k){ u.searchParams.set(k, UTM[k]); });
+    document.getElementById("refer-link").href = u.toString();
+  } catch (e) {}
+})();
+</script>
