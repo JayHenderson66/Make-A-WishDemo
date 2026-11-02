@@ -1326,7 +1326,7 @@ function referralMessageRendered() {
     R.allowOne = 0;
     clearTimeout(R.timer);
     // closing line first, then the form. Delay in ms; override with window.MAW_FORM_DELAY.
-    var delay = (typeof window.MAW_FORM_DELAY === 'number') ? window.MAW_FORM_DELAY : 5000;
+    var delay = (typeof window.MAW_FORM_DELAY === 'number') ? window.MAW_FORM_DELAY : 3000;
     console.info('[MAW referral] closing line shown; opening form in ' + delay + 'ms');
     setTimeout(openReferralModal, delay);
   }
