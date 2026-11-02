@@ -343,7 +343,9 @@
   .maw-msgr-row,.maw-msgr-quickreplies,.maw-msgr-system{animation:maw-msg-in .38s ease-out both;}
   .maw-msgr-row{display:flex;flex-direction:column;max-width:86%;}
   .maw-msgr-row.outbound{align-self:flex-end;align-items:flex-end;}
-  .maw-msgr-row.inbound{align-self:flex-start;align-items:flex-start;}
+  .maw-msgr-row.inbound{align-self:flex-start;flex-direction:row;align-items:flex-end;gap:8px;max-width:94%;}
+  .maw-msgr-stack{display:flex;flex-direction:column;align-items:flex-start;min-width:0;max-width:100%;}
+  .maw-msgr-avatar{width:26px;height:26px;border-radius:50%;background:var(--brand-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.82rem;line-height:1;flex-shrink:0;box-shadow:0 1px 3px rgba(11,61,145,0.3);}
   .maw-msgr-bubble{padding:10px 14px;border-radius:14px;font-size:0.87rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
   .maw-msgr-row.outbound .maw-msgr-bubble{background:var(--brand-blue);color:#fff;border-bottom-right-radius:4px;}
   .maw-msgr-row.inbound .maw-msgr-bubble{background:#fff;color:var(--text-dark);border:1px solid var(--border);border-bottom-left-radius:4px;}
@@ -1302,6 +1304,30 @@ function captureReferralAnswers(text) {
   } catch (e) {}
 }
 
+// (2026-11-02) Hand-off choreography: after "Continue", the bot's closing line must show in
+// chat 1-2 seconds BEFORE the form window opens, and any later bot message (e.g. "Anything
+// else I can help with?") is held until the form is submitted or closed, so the chat and
+// the page feel coordinated. State is shared with the messenger's pacing queue.
+window.mawReferral = { hold: false, allowOne: 0, timer: null };
+function beginReferralHandoff(postbackSent) {
+  var R = window.mawReferral;
+  if (!postbackSent) { openReferralModal(); return; }
+  R.hold = true; R.allowOne = 1;
+  clearTimeout(R.timer);
+  // Failsafe: if the closing line never arrives, open the form anyway after 7s.
+  R.timer = setTimeout(function () {
+    if (R.hold && R.allowOne > 0) { R.allowOne = 0; openReferralModal(); }
+  }, 7000);
+}
+function referralMessageRendered() {
+  var R = window.mawReferral;
+  if (R.hold && R.allowOne > 0) {
+    R.allowOne = 0;
+    clearTimeout(R.timer);
+    setTimeout(openReferralModal, 1800); // closing line first, then the form
+  }
+}
+
 function openReferralModal() {
   var ra = window.demoState.referralAnswers || {};
   if (ra.age) document.getElementById('rf-age').value = ra.age;
@@ -1311,6 +1337,12 @@ function openReferralModal() {
 
 function closeReferralModal() {
   document.getElementById('referral-modal-backdrop').classList.remove('open');
+  var R = window.mawReferral;
+  if (R && R.hold) {
+    R.hold = false; clearTimeout(R.timer);
+    // release held bot messages (e.g. "Anything else?") shortly after the page switches
+    setTimeout(function () { if (window.mawFlushHeldMessages) window.mawFlushHeldMessages(); }, 900);
+  }
 }
 
 function submitReferralForm() {
@@ -1630,7 +1662,13 @@ function showCaseUpdateState() {
     Genesys('subscribe', 'MessagingService.typingTimeout', hideTyping);
     Genesys('subscribe', 'MessagingService.conversationDisconnected', function () {
       started = false;
-      addSystemLine('This conversation has ended.');
+      // (2026-11-02) wait until queued bot messages have been shown, so the divider
+      // never appears above the bot's last line.
+      var waits = 0;
+      (function showEnded() {
+        if ((heldMessages.length || flushing) && waits++ < 60) { setTimeout(showEnded, 300); return; }
+        addSystemLine('This conversation has ended.');
+      })();
     });
     // "Clear conversation" trash-can icon in the header — the Genesys
     // Cloud UI setting Jay's referring to is the Messenger Configuration's
@@ -1798,16 +1836,24 @@ function showCaseUpdateState() {
   // history render immediately. Tune these two numbers to taste.
   var PACE_TYPING = 750;
   var PACE_GAP = 350;
+  // Held while the video is open, or (2026-11-02) after the referral hand-off's closing
+  // line has been shown and until the referral form is submitted/closed.
+  function isHeld() {
+    var R = window.mawReferral;
+    return isVideoOpen() || !!(R && R.hold && R.allowOne <= 0);
+  }
   function flushHeld() {
     if (flushing || !heldMessages.length) return;
     flushing = true;
     (function next() {
       if (!heldMessages.length) { flushing = false; return; }
-      if (isVideoOpen()) { flushing = false; return; } // re-opened; wait for next close
+      if (isHeld()) { flushing = false; return; } // re-opened; wait for next release
       showTyping();
       setTimeout(function () {
         hideTyping();
-        renderMessage(heldMessages.shift());
+        var mm = heldMessages.shift();
+        renderMessage(mm);
+        if (mm && mm.text && ((mm.direction || '').toLowerCase() === 'outbound') && typeof referralMessageRendered === 'function') referralMessageRendered();
         scrollToBottom();
         setTimeout(next, PACE_GAP);
       }, PACE_TYPING);
@@ -1862,13 +1908,13 @@ function showCaseUpdateState() {
         suppressEchoUntil = 0; // swallow only the one echo of the automatic choice
         return;
       }
-      if (isVideoOpen() || (pace && isBot)) {
+      if (isHeld() || (pace && isBot)) {
         heldMessages.push(m);
       } else {
         renderMessage(m);
       }
     });
-    if (heldMessages.length && !isVideoOpen()) flushHeld();
+    if (heldMessages.length && !isHeld()) flushHeld();
     scrollToBottom();
   }
 
@@ -2038,8 +2084,9 @@ function showCaseUpdateState() {
         // Works for either button type; a Postback button also tells the Bot Flow to move on
         // (which stops the "Sorry, I didn't receive any input" reprompt loop).
         if (card.title && /continue your referral/i.test(card.title)) {
-          openReferralModal();
-          if (action.type !== 'Link') sendCardPostback(action);
+          var isPostback = action.type !== 'Link';
+          beginReferralHandoff(isPostback); // closing line first, form 1-2s later
+          if (isPostback) sendCardPostback(action);
           return;
         }
         if (action.type === 'Link' && action.url) {
@@ -2180,7 +2227,23 @@ function showCaseUpdateState() {
         }
       });
     }
-    children.forEach(function (c) { row.appendChild(c); });
+    if (direction === 'inbound') {
+      // (2026-11-02) Make-A-Wish star avatar beside every bot-originated message;
+      // visitor messages ('outbound' here) get none. Disable: window.MAW_BOT_AVATAR = false.
+      var stack = document.createElement('div');
+      stack.className = 'maw-msgr-stack';
+      children.forEach(function (c) { stack.appendChild(c); });
+      if (window.MAW_BOT_AVATAR !== false) {
+        var av = document.createElement('div');
+        av.className = 'maw-msgr-avatar';
+        av.setAttribute('aria-hidden', 'true');
+        av.innerHTML = '&#10022;';
+        row.appendChild(av);
+      }
+      row.appendChild(stack);
+    } else {
+      children.forEach(function (c) { row.appendChild(c); });
+    }
     els.body.appendChild(row);
     scrollToBottom();
     return row;
