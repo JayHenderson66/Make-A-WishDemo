@@ -1699,6 +1699,7 @@ function showCaseUpdateState() {
     var text = els.input.value.trim();
     if (!text || !window.Genesys) return;
     els.input.value = '';
+    Array.prototype.forEach.call(els.body.querySelectorAll('.maw-msgr-yn button'), function (b) { b.disabled = true; });
     if (typeof captureReferralAnswers === 'function') captureReferralAnswers(text);
     Genesys('command', 'MessagingService.sendMessage', { message: text });
   }
@@ -1860,6 +1861,7 @@ function showCaseUpdateState() {
       var isImpact = row === 'inbound' && msg.text.length > 60 && IMPACT_KEYWORDS.test(msg.text);
       renderRow(row, [renderTextBubble(msg.text)], isImpact);
       renderedSomething = true;
+      if (row === 'inbound' && isPhysicianYesNo(msg.text)) renderYesNoChips();
     }
 
     if (msg.type === 'Structured' && msg.content && msg.content.length) {
@@ -2050,6 +2052,33 @@ function showCaseUpdateState() {
     wrap.className = 'maw-msgr-carousel';
     cards.forEach(function (card) { wrap.appendChild(renderCard(card)); });
     renderRow(row, [wrap]);
+  }
+
+  // (2026-11-02) Ava's physician-verification question is plain text; show tappable
+  // Yes / No chips under it. Site-side only: a tap sends the same text the visitor
+  // would have typed. Matches the question wording loosely (physician + verified/confirmed
+  // + a question mark) so small rewordings by Ava still work. Disable with
+  // window.MAW_YESNO_CHIPS = false. Chips lock after one tap or if the visitor types.
+  function isPhysicianYesNo(text) {
+    if (window.MAW_YESNO_CHIPS === false) return false;
+    var t = text || '';
+    return /\?/.test(t) && (/physician[^.?]*\b(verif|confirm)/i.test(t) || /\b(verif|confirm)[^.?]*physician/i.test(t));
+  }
+  function renderYesNoChips() {
+    var wrap = document.createElement('div');
+    wrap.className = 'maw-msgr-quickreplies maw-msgr-yn';
+    ['Yes', 'No'].forEach(function (label) {
+      var btn = document.createElement('button');
+      btn.className = 'maw-msgr-qr-btn';
+      btn.textContent = label;
+      btn.addEventListener('click', function () {
+        Array.prototype.forEach.call(wrap.querySelectorAll('button'), function (b) { b.disabled = true; });
+        if (window.Genesys) Genesys('command', 'MessagingService.sendMessage', { message: label });
+      });
+      wrap.appendChild(btn);
+    });
+    els.body.appendChild(wrap);
+    scrollToBottom();
   }
 
   function renderQuickReplies(replies) {
