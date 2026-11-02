@@ -791,8 +791,8 @@
 <div class="checkout-modal-backdrop" id="referral-modal-backdrop">
   <div class="checkout-card checkout-modal-inner" style="max-width:520px;">
     <button class="checkout-modal-close" id="referral-modal-close" aria-label="Close">&times;</button>
-    <h2 class="checkout-modal-headline">Start the referral</h2>
-    <p class="checkout-modal-subline">You've already told us the essentials in chat, so we filled those in. Just confirm a few details.</p>
+    <h2 class="checkout-modal-headline" style="font-size:1.95rem;line-height:1.2;">Confirm the referral details</h2>
+    <p class="checkout-modal-subline" style="font-size:1rem;">You've already told us the essentials in chat, so we filled those in. Add the family's contact details and submit.</p>
     <div class="rf-grid">
       <label class="rf-field"><span>Child's first name</span><input type="text" id="rf-child" value="Sophie"></label>
       <label class="rf-field"><span>Age</span><input type="text" id="rf-age" value="7"></label>
@@ -1312,6 +1312,7 @@ window.mawReferral = { hold: false, allowOne: 0, timer: null };
 function beginReferralHandoff(postbackSent) {
   var R = window.mawReferral;
   if (!postbackSent) { openReferralModal(); return; }
+  console.info('[MAW referral] Continue clicked; waiting for the bot closing line before opening the form');
   R.hold = true; R.allowOne = 1;
   clearTimeout(R.timer);
   // Failsafe: if the closing line never arrives, open the form anyway after 7s.
@@ -1324,7 +1325,10 @@ function referralMessageRendered() {
   if (R.hold && R.allowOne > 0) {
     R.allowOne = 0;
     clearTimeout(R.timer);
-    setTimeout(openReferralModal, 1800); // closing line first, then the form
+    // closing line first, then the form. Delay in ms; override with window.MAW_FORM_DELAY.
+    var delay = (typeof window.MAW_FORM_DELAY === 'number') ? window.MAW_FORM_DELAY : 2200;
+    console.info('[MAW referral] closing line shown; opening form in ' + delay + 'ms');
+    setTimeout(openReferralModal, delay);
   }
 }
 
