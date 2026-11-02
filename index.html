@@ -280,6 +280,16 @@
   .alumni-icon{font-size:1.8rem;flex-shrink:0;}
   .alumni-text strong{display:block;color:var(--brand-blue-dark);font-size:0.92rem;margin-bottom:3px;}
   .alumni-text span{font-size:0.84rem;color:var(--text-mid);}
+  /* (2026-11-02) Post-submit confirmation: prominent "what happens next" for the referring clinician */
+  .confirm-hero{display:flex;gap:20px;align-items:center;background:linear-gradient(120deg,var(--accent-light),var(--cream));border:1px solid #BDEDE9;border-radius:12px;padding:26px 28px;margin-top:8px;box-shadow:var(--shadow-sm);}
+  .confirm-check{width:56px;height:56px;border-radius:50%;background:#00A99D;color:#fff;font-size:1.9rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(0,119,111,0.3);}
+  .confirm-hero h2{margin:0 0 6px;color:var(--brand-blue-dark);font-size:1.45rem;}
+  .confirm-hero p{margin:0;color:var(--text-mid);font-size:0.98rem;line-height:1.5;}
+  .notify-card{display:flex;gap:16px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-top:18px;box-shadow:var(--shadow-sm);}
+  .notify-icon{font-size:1.6rem;flex-shrink:0;line-height:1.2;}
+  .notify-card strong{display:block;color:var(--brand-blue-dark);font-size:1rem;margin-bottom:4px;}
+  .notify-card span{font-size:0.9rem;color:var(--text-mid);line-height:1.5;}
+  .tl-done .tl-num{background:#00A99D;box-shadow:0 2px 6px rgba(0,119,111,0.3);}
 
   /* FOOTER — mirrors real site's legal + chapter-selector pattern (generic placeholder text, not copied) */
   footer{background:var(--brand-blue-dark);color:rgba(255,255,255,0.6);padding:0;}
@@ -881,11 +891,25 @@
   <div class="content-wrap">
     <!-- Beat 3 state -->
     <div id="timeline-beat3">
+      <div class="confirm-hero">
+        <div class="confirm-check">&#10003;</div>
+        <div>
+          <h2>Referral received</h2>
+          <p>Thank you for referring <span id="tl-child">this child</span>. Your local chapter has been notified, and a chapter team member will take it from here.</p>
+        </div>
+      </div>
       <ol class="timeline">
-        <li><span class="tl-num">1</span><div class="tl-text"><strong>Your local chapter is notified</strong><span>Today</span></div></li>
+        <li class="tl-done"><span class="tl-num">&#10003;</span><div class="tl-text"><strong>Your local chapter is notified</strong><span>Done &mdash; today</span></div></li>
         <li><span class="tl-num">2</span><div class="tl-text"><strong>A chapter team member reviews the case</strong><span>Within 3 business days</span></div></li>
-        <li><span class="tl-num">3</span><div class="tl-text"><strong>You'll hear back with next steps</strong><span>By the date shown in your confirmation</span></div></li>
+        <li><span class="tl-num">3</span><div class="tl-text"><strong>The family and you hear back with next steps</strong><span>By email and text</span></div></li>
       </ol>
+      <div class="notify-card">
+        <div class="notify-icon">&#9993;</div>
+        <div>
+          <strong>What to expect from us</strong>
+          <span>A confirmation email is on its way to <span id="tl-by">you</span>. A chapter team member will reach out to <span id="tl-guardian">the family</span><span id="tl-phone-wrap"></span> within 3 business days. We'll keep you updated by email and text at each step.</span>
+        </div>
+      </div>
       <div class="reassure-line">You can check status anytime at your referral status link.</div>
 
       <div style="text-align:center;margin-top:28px;">
@@ -896,12 +920,23 @@
     <!-- Beat 5 state, hidden until the capture-aid button above is clicked -->
     <div id="timeline-beat5" style="display:none;">
       <div class="status-pill">Step 2 of 3 complete</div>
-      <h1 style="font-size:1.4rem;">Your child's case is moving forward.</h1>
-      <div class="alumni-card">
-        <div class="alumni-icon">&#128172;</div>
-        <div class="alumni-text">
-          <strong>While you wait, meet a family who's been where you are</strong>
-          <span>A story from the Wish Alumni Community</span>
+      <div class="confirm-hero">
+        <div class="confirm-check">&#10003;</div>
+        <div>
+          <h2>The case is moving forward.</h2>
+          <p>A chapter team member has reviewed the referral and is now reaching out to the family.</p>
+        </div>
+      </div>
+      <ol class="timeline">
+        <li class="tl-done"><span class="tl-num">&#10003;</span><div class="tl-text"><strong>Your local chapter is notified</strong><span>Done</span></div></li>
+        <li class="tl-done"><span class="tl-num">&#10003;</span><div class="tl-text"><strong>A chapter team member reviews the case</strong><span>Done &mdash; approved to move forward</span></div></li>
+        <li><span class="tl-num">3</span><div class="tl-text"><strong>The family and you hear back with next steps</strong><span>In progress &mdash; by email and text</span></div></li>
+      </ol>
+      <div class="notify-card">
+        <div class="notify-icon">&#128172;</div>
+        <div>
+          <strong>Nothing more is needed from you right now</strong>
+          <span>We'll email and text you as soon as the family has been contacted and a wish journey begins.</span>
         </div>
       </div>
     </div>
@@ -1279,6 +1314,17 @@ function closeReferralModal() {
 }
 
 function submitReferralForm() {
+  // Personalize the confirmation from what was entered in the form (fallbacks keep the generic text).
+  try {
+    function val(id) { var e = document.getElementById(id); return e ? (e.value || '').trim() : ''; }
+    function put(id, t) { var e = document.getElementById(id); if (e && t) e.textContent = t; }
+    var child = val('rf-child');
+    put('tl-child', child);
+    put('tl-by', val('rf-by'));
+    put('tl-guardian', val('rf-guardian'));
+    var ph = val('rf-phone');
+    put('tl-phone-wrap', ph ? ' at ' + ph : '');
+  } catch (e) {}
   closeReferralModal();
   showPage('timeline'); // same window; chat stays open
 }
@@ -1858,7 +1904,11 @@ function showCaseUpdateState() {
     // me about the teaser" / buttons-with-no-question-text report,
     // confirmed via live console trace. Now both render, text first.
     if (msg.text) {
-      var isImpact = row === 'inbound' && msg.text.length > 60 && IMPACT_KEYWORDS.test(msg.text);
+      // (2026-11-02) The teal "impact" styling is for the donor story only; on the Refer
+      // page Ava's lines should look like every other bot bubble.
+      var pr = document.getElementById('page-refer');
+      var onRefer = !!(pr && pr.classList.contains('active'));
+      var isImpact = !onRefer && row === 'inbound' && msg.text.length > 60 && IMPACT_KEYWORDS.test(msg.text);
       renderRow(row, [renderTextBubble(msg.text)], isImpact);
       renderedSomething = true;
       if (row === 'inbound' && isPhysicianYesNo(msg.text)) renderYesNoChips();
