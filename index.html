@@ -324,7 +324,7 @@
   .maw-msgr-invite .invite-dismiss{background:var(--cream);color:var(--text-mid);}
   .maw-msgr-invite .invite-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.9rem;padding:2px;}
 
-  .maw-msgr-panel{position:fixed;bottom:24px;right:24px;z-index:950;width:380px;max-width:calc(100vw - 32px);height:min(640px, calc(100vh - 48px));background:#fff;border-radius:16px;box-shadow:var(--shadow-md);display:none;flex-direction:column;overflow:hidden;font-family:'Lato',sans-serif;}
+  .maw-msgr-panel{position:fixed;bottom:24px;right:24px;z-index:950;width:400px;max-width:calc(100vw - 32px);height:min(780px, calc(100vh - 48px));background:#fff;border-radius:16px;box-shadow:var(--shadow-md);display:none;flex-direction:column;overflow:hidden;font-family:'Lato',sans-serif;}
   .maw-msgr-panel.open{display:flex;}
   .maw-msgr-head{background:linear-gradient(120deg,var(--brand-blue),var(--brand-blue-dark));color:#fff;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
   .maw-msgr-head-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
@@ -398,6 +398,24 @@
     .maw-msgr-launcher{right:16px;bottom:16px;}
     .maw-msgr-invite{right:16px;bottom:88px;}
   }
+/* (2026-11-03) Refer page redesign */
+.refer-hero{padding:0;background:linear-gradient(155deg,var(--brand-blue) 0%,var(--brand-blue-dark) 100%);}
+.refer-hero-inner{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;max-width:1280px;margin:0 auto;padding:56px 48px 64px;}
+.refer-hero-copy h1{font-size:2.5rem;margin-bottom:14px;letter-spacing:-0.01em;}
+.refer-hero-copy p{opacity:0.85;font-size:1.05rem;max-width:480px;margin-bottom:28px;}
+.refer-cta{background:#fff !important;color:var(--brand-blue-dark) !important;padding:15px 38px;}
+.refer-cta:hover{background:var(--accent) !important;}
+.refer-hero-note{margin-top:14px;font-size:0.84rem;opacity:0.75;}
+.refer-steps-card{background:#fff;color:var(--text-dark,#1b2a3a);border-radius:12px;padding:28px 30px;box-shadow:var(--shadow-md);}
+.refer-steps-title{font-family:'Droid Serif',serif;font-size:1.15rem;font-weight:700;color:var(--brand-blue-dark);margin-bottom:18px;}
+.refer-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px;}
+.refer-steps li{display:flex;gap:16px;align-items:flex-start;}
+.refer-steps .n{flex:0 0 34px;height:34px;border-radius:50%;background:var(--brand-blue);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.refer-steps strong{display:block;color:var(--brand-blue-dark);font-size:1rem;margin-bottom:2px;}
+.refer-steps span:not(.n){display:block;color:var(--text-mid);font-size:0.92rem;}
+.refer-reassure{background:#fff;border-bottom:1px solid var(--border);}
+.refer-reassure-inner{max-width:1280px;margin:0 auto;padding:22px 48px;color:var(--text-mid);font-size:0.98rem;text-align:center;}
+@media (max-width:860px){.refer-hero-inner{grid-template-columns:1fr;padding:40px 24px;gap:32px;}}
 /* (2026-11-03) Capture-aid buttons are hidden from visitors. Add ?aids=1 to the URL to show them. */
 .capture-aid { display: none !important; }
 html.show-aids .capture-aid { display: block !important; }
@@ -840,48 +858,46 @@ html.show-aids .capture-aid { display: block !important; }
      PAGE 5 — REFER A CHILD  (Act 2, Beats 1b–2)
      ══════════════════════════════════════════════ -->
 <div class="page" id="page-refer">
-  <div class="page-header">
-    <button class="back-link" onclick="showPage('hospital')">&larr; Back</button>
-    <h1>Refer a Child for a Wish</h1>
-    <p>If a child in your care might qualify, we can help you find out — in a few minutes, in plain language.</p>
+  <!--
+    [ACTION MAP TRIGGER POINT — Act 2 Beat 1]
+    Segment: referrer-domain/UTM tagging simulating a hospital
+    resource-page link → tags visitor "Referral Source, First-Time".
+    No action fires yet at this point — sets up Beat 2.
+
+    (2026-11-03) Redesigned: the role question (parent/guardian vs. medical
+    professional) now lives ONLY in the chat, so the on-page role buttons were
+    removed. Hero = headline + Get Started on the left, "How it works" card on
+    the right (same two-column pattern as the home hero), then a short
+    reassurance strip. Get Started opens the chat (startReferral()).
+  -->
+  <div class="page-header refer-hero">
+    <div class="refer-hero-inner">
+      <div class="refer-hero-copy">
+        <button class="back-link" onclick="showPage('hospital')">&larr; Back</button>
+        <h1>Refer a Child for a Wish</h1>
+        <p>If a child in your care might qualify, we can help you find out — in a few minutes, in plain language.</p>
+        <button class="btn-primary refer-cta" onclick="startReferral()">Get Started</button>
+        <div class="refer-hero-note">About 5 minutes &middot; a few short questions &middot; no long forms</div>
+      </div>
+      <div class="refer-steps-card">
+        <div class="refer-steps-title">How it works</div>
+        <ol class="refer-steps">
+          <li><span class="n">1</span><div><strong>Tell us a little</strong><span>Answer a few short questions in a quick chat.</span></div></li>
+          <li><span class="n">2</span><div><strong>Confirm the details</strong><span>We fill in what you shared. You review and submit.</span></div></li>
+          <li><span class="n">3</span><div><strong>We take it from here</strong><span>The local chapter reaches out to the family.</span></div></li>
+        </ol>
+      </div>
+    </div>
   </div>
 
-  <div class="content-wrap">
-    <!--
-      [ACTION MAP TRIGGER POINT — Act 2 Beat 1]
-      Segment: referrer-domain/UTM tagging simulating a hospital
-      resource-page link → tags visitor "Referral Source, First-Time".
-      No action fires yet at this point — sets up Beat 2.
-    -->
-    <div class="content-card" id="refer-start-card">
-      <p style="margin-bottom:0;">Getting started takes about 5 minutes. We'll ask a few short questions — no long forms.</p>
+  <div class="refer-reassure">
+    <div class="refer-reassure-inner">
+      Wishes are for children ages 2&frac12;&ndash;17 with a critical illness. Refer with the family's knowledge.
     </div>
+  </div>
 
-    <button class="btn-primary" style="margin-top:8px;color:#fff;background:var(--brand-blue);" onclick="startReferral()">Get Started</button>
-
-    <!--
-      [BOT FLOW RENDERS HERE — no page markup needed]
-      Once "Get Started" is clicked, the role buttons (parent/guardian
-      vs. medical professional), the free-text AVA eligibility exchange,
-      and the handoff to a shortened pre-filled form all render inside
-      the Messenger widget conversation, per the Digital Bot Flow →
-      AVA handoff pattern. Not built as page-level HTML — this page's
-      job is just to be the entry point and pass role context if the
-      operator picks a role using the fallback buttons below.
-
-      Fallback role buttons (optional, for visual consistency during
-      capture if the widget's own buttons render differently than
-      expected — verify live and remove if the widget renders its own
-      cleanly):
-    -->
-    <div class="role-row" id="refer-role-row" style="display:none;">
-      <button class="role-btn" onclick="selectRole('parent_guardian')">I'm a parent/guardian</button>
-      <button class="role-btn" onclick="selectRole('medical_professional')">I'm a medical professional</button>
-    </div>
-
-    <div class="capture-aid" style="text-align:center;margin-top:28px;">
-      <button class="btn-ghost" style="border-color:var(--border);color:var(--brand-blue-dark);" onclick="showPage('timeline')">(Capture aid) Continue to timeline &rarr;</button>
-    </div>
+  <div class="capture-aid" style="text-align:center;margin:28px 0;">
+    <button class="btn-ghost" style="border-color:var(--border);color:var(--brand-blue-dark);" onclick="showPage('timeline')">(Capture aid) Continue to timeline &rarr;</button>
   </div>
 </div><!-- /page-refer -->
 
@@ -1499,9 +1515,8 @@ function startReferral() {
   // panel, same as the original widget-based design. The role-button
   // fallback below stays visible too, in case the live conversation's
   // own role menu ever needs a visual double-check during capture.
+  // (2026-11-03) On-page role buttons removed — the role question is asked in the chat only.
   if (window.MAWMessenger) window.MAWMessenger.open();
-  document.getElementById('refer-role-row').style.display = 'flex';
-  document.getElementById('refer-role-row').scrollIntoView({behavior:'smooth', block:'center'});
 }
 
 function selectRole(role) {
