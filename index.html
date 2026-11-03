@@ -918,18 +918,19 @@ html.show-aids .capture-aid { display: block !important; }
         <div>
           <h2>Referral received</h2>
           <p>Thank you for referring <span id="tl-child">this child</span>. Your local chapter has been notified, and a chapter team member will take it from here.</p>
+          <p id="tl-case" style="display:none;margin:10px 0 0;font-size:0.9rem;opacity:0.85;">Case <strong id="tl-caseid"></strong><span id="tl-chapter-wrap"> &middot; <span id="tl-chapter"></span></span></p>
         </div>
       </div>
       <ol class="timeline">
         <li class="tl-done"><span class="tl-num">&#10003;</span><div class="tl-text"><strong>Your local chapter is notified</strong><span>Done &mdash; today</span></div></li>
-        <li><span class="tl-num">2</span><div class="tl-text"><strong>A chapter team member reviews the case</strong><span>Within 3 business days</span></div></li>
+        <li><span class="tl-num">2</span><div class="tl-text"><strong>A chapter team member reviews the case</strong><span>Within <span class="tl-sla">3</span> business days</span></div></li>
         <li><span class="tl-num">3</span><div class="tl-text"><strong>The family and you hear back with next steps</strong><span>By email and text</span></div></li>
       </ol>
       <div class="notify-card">
         <div class="notify-icon">&#9993;</div>
         <div>
           <strong>What to expect from us</strong>
-          <span>A confirmation email is on its way to <span id="tl-by">you</span>. A chapter team member will reach out to <span id="tl-guardian">the family</span><span id="tl-phone-wrap"></span> within 3 business days. We'll keep you updated by email and text at each step.</span>
+          <span>A confirmation email is on its way to <span id="tl-by">you</span>. A chapter team member will reach out to <span id="tl-guardian">the family</span><span id="tl-phone-wrap"></span> within <span class="tl-sla">3</span> business days. We'll keep you updated by email and text at each step.</span>
         </div>
       </div>
       <div class="reassure-line">You can check status anytime at your referral status link.</div>
@@ -1312,6 +1313,20 @@ function closeCheckoutModal() {
 // visitor typed in the chat (see captureReferralAnswers), and stay editable.
 window.demoState.referralAnswers = window.demoState.referralAnswers || { age: null, diagnosis: null };
 
+// (2026-11-03) Case details from the bot. Architect block 97 (Eligibility Verdict) is worded so it
+// contains: "...matched to <chapter>, case <caseId>, ... within <n> business days." We parse that
+// sentence; any piece that isn't found is simply skipped (page keeps generic text).
+window.demoState.caseInfo = window.demoState.caseInfo || {};
+function captureCaseDetails(text) {
+  try {
+    var t = String(text || ''), ci = window.demoState.caseInfo, m;
+    if ((m = t.match(/matched to (.+?),\s*case\s+([A-Za-z0-9-]+)/i))) { ci.chapter = m[1].trim(); ci.caseId = m[2]; }
+    else if ((m = t.match(/\bcase\s+(?:number\s+|ID\s+)?([A-Z]{2,}[A-Za-z0-9-]*\d[A-Za-z0-9-]*)/))) ci.caseId = m[1];
+    if ((m = t.match(/within\s+(\d+)\s+business days/i))) ci.sla = m[1];
+    if (ci.caseId || ci.sla) console.info('[MAW case] parsed from bot message', ci);
+  } catch (e) {}
+}
+
 function captureReferralAnswers(text) {
   try {
     var t = (text || '').trim();
@@ -1380,6 +1395,16 @@ function submitReferralForm() {
     put('tl-guardian', val('rf-guardian'));
     var ph = val('rf-phone');
     put('tl-phone-wrap', ph ? ' at ' + ph : '');
+    // Case details parsed from the bot's verdict message (see captureCaseDetails). If the bot
+    // didn't send them, the page keeps its generic text.
+    var ci = window.demoState.caseInfo || {};
+    if (ci.caseId) {
+      put('tl-caseid', ci.caseId);
+      if (ci.chapter) put('tl-chapter', ci.chapter);
+      else { var cw = document.getElementById('tl-chapter-wrap'); if (cw) cw.style.display = 'none'; }
+      var cl = document.getElementById('tl-case'); if (cl) cl.style.display = 'block';
+    }
+    if (ci.sla) document.querySelectorAll('.tl-sla').forEach(function (e) { e.textContent = ci.sla; });
   } catch (e) {}
   mawJourneyRecord('referral_form_submitted', {
     referral_source: 'childrens_hospital',
@@ -2001,6 +2026,7 @@ function showCaseUpdateState() {
       var isImpact = !onRefer && row === 'inbound' && msg.text.length > 60 && IMPACT_KEYWORDS.test(msg.text);
       renderRow(row, [renderTextBubble(msg.text)], isImpact);
       renderedSomething = true;
+      if (row === 'inbound' && typeof captureCaseDetails === 'function') captureCaseDetails(msg.text);
       if (row === 'inbound' && isPhysicianYesNo(msg.text)) renderYesNoChips();
     }
 
