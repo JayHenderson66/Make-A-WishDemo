@@ -398,7 +398,11 @@
     .maw-msgr-launcher{right:16px;bottom:16px;}
     .maw-msgr-invite{right:16px;bottom:88px;}
   }
+/* (2026-11-03) Capture-aid buttons are hidden from visitors. Add ?aids=1 to the URL to show them. */
+.capture-aid { display: none !important; }
+html.show-aids .capture-aid { display: block !important; }
 </style>
+<script>if (/[?&]aids=1/.test(location.search)) document.documentElement.classList.add('show-aids');</script>
 
 <!-- ============================================================
      Genesys Web Messenger bootstrap — deployment cd1b2975-a305-4a13-
@@ -875,7 +879,7 @@
       <button class="role-btn" onclick="selectRole('medical_professional')">I'm a medical professional</button>
     </div>
 
-    <div style="text-align:center;margin-top:28px;">
+    <div class="capture-aid" style="text-align:center;margin-top:28px;">
       <button class="btn-ghost" style="border-color:var(--border);color:var(--brand-blue-dark);" onclick="showPage('timeline')">(Capture aid) Continue to timeline &rarr;</button>
     </div>
   </div>
@@ -914,7 +918,7 @@
       </div>
       <div class="reassure-line">You can check status anytime at your referral status link.</div>
 
-      <div style="text-align:center;margin-top:28px;">
+      <div class="capture-aid" style="text-align:center;margin-top:28px;">
         <button class="btn-ghost" style="border-color:var(--border);color:var(--brand-blue-dark);" onclick="showCaseUpdateState()">(Capture aid) Show 3-days-later case update &rarr;</button>
       </div>
     </div>
