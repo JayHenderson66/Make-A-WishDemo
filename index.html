@@ -933,7 +933,6 @@ html.show-aids .capture-aid { display: block !important; }
           <span>A confirmation email is on its way to <span id="tl-by">you</span>. A chapter team member will reach out to <span id="tl-guardian">the family</span><span id="tl-phone-wrap"></span> within <span class="tl-sla">3</span> business days. We'll keep you updated by email and text at each step.</span>
         </div>
       </div>
-      <div class="reassure-line">You can check status anytime at your referral status link.</div>
 
       <div class="capture-aid" style="text-align:center;margin-top:28px;">
         <button class="btn-ghost" style="border-color:var(--border);color:var(--brand-blue-dark);" onclick="showCaseUpdateState()">(Capture aid) Show 3-days-later case update &rarr;</button>
@@ -2023,7 +2022,9 @@ function showCaseUpdateState() {
       // page Ava's lines should look like every other bot bubble.
       var pr = document.getElementById('page-refer');
       var onRefer = !!(pr && pr.classList.contains('active'));
-      var isImpact = !onRefer && row === 'inbound' && msg.text.length > 60 && IMPACT_KEYWORDS.test(msg.text);
+      // (2026-11-03) Jay: keep bot bubbles consistent with Act 2 — avatar on the left, plain white
+      // bubble, no teal "impact" card. Re-enable the old look with window.MAW_IMPACT_STYLE = true.
+      var isImpact = window.MAW_IMPACT_STYLE === true && !onRefer && row === 'inbound' && msg.text.length > 60 && IMPACT_KEYWORDS.test(msg.text);
       renderRow(row, [renderTextBubble(msg.text)], isImpact);
       renderedSomething = true;
       if (row === 'inbound' && typeof captureCaseDetails === 'function') captureCaseDetails(msg.text);
@@ -2157,6 +2158,15 @@ function showCaseUpdateState() {
           var isPostback = action.type !== 'Link';
           beginReferralHandoff(isPostback); // closing line first, form 1-2s later
           if (isPostback) sendCardPostback(action);
+          return;
+        }
+        // (2026-11-03) Donor "Ready to complete your gift?" card. If Architect's Continue button is a
+        // POSTBACK (value e.g. continue_checkout) instead of a Link, open the same checkout window and
+        // also post the click back so the Bot Flow moves on (stops the no-input reprompt), exactly like
+        // the referral card. A Link-type button keeps the old behavior (window only, no postback).
+        if (card.title && /ready to complete your gift/i.test(card.title) && action.type !== 'Link') {
+          openCheckoutModal(window.demoState && window.demoState.selectedAmount);
+          sendCardPostback(action);
           return;
         }
         if (action.type === 'Link' && action.url) {
