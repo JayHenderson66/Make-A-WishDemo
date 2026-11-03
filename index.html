@@ -398,6 +398,12 @@
     .maw-msgr-launcher{right:16px;bottom:16px;}
     .maw-msgr-invite{right:16px;bottom:88px;}
   }
+/* (2026-11-03) Soft drop shadows so chat bubbles, cards and the Sammy video stand out. */
+.maw-msgr-row.inbound .maw-msgr-bubble{box-shadow:0 2px 8px rgba(0,40,90,0.14),0 1px 2px rgba(0,40,90,0.10);}
+.maw-msgr-row.outbound .maw-msgr-bubble{box-shadow:0 3px 10px rgba(0,87,184,0.30),0 1px 2px rgba(0,40,90,0.12);}
+.maw-msgr-card{box-shadow:0 4px 14px rgba(0,40,90,0.16),0 1px 3px rgba(0,40,90,0.10);}
+.maw-msgr-qr-btn{box-shadow:0 1px 4px rgba(0,40,90,0.12);}
+.video-modal-inner{box-shadow:0 18px 50px rgba(0,10,30,0.55),0 4px 14px rgba(0,10,30,0.35);border:1px solid rgba(255,255,255,0.14);}
 /* (2026-11-03) Refer page redesign */
 .refer-hero{padding:0;background:linear-gradient(155deg,var(--brand-blue) 0%,var(--brand-blue-dark) 100%);}
 .refer-hero-inner{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;max-width:1280px;margin:0 auto;padding:56px 48px 64px;}
@@ -2143,6 +2149,11 @@ function showCaseUpdateState() {
     // of them is clicked.
     var cardButtons = [];
     (card.actions || []).forEach(function (action) {
+      // (2026-11-03) The first card's "See if a child may qualify for a wish" button is not shown to
+      // donors (that journey is Act 2). It must STAY in the Architect menu: the Refer page's automatic
+      // entry finds and sends this 'eligibility' choice. Hide it here instead of removing it there.
+      if (window.MAW_SHOW_ELIGIBILITY_BUTTON !== true &&
+          (action.payload === 'eligibility' || /qualify for a wish/i.test(action.text || ''))) return;
       var btn = document.createElement('button');
       btn.className = 'maw-msgr-card-btn' + (action.type === 'Link' ? ' secondary' : '');
       btn.textContent = action.text || (action.type === 'Link' ? 'Open' : 'Select');
