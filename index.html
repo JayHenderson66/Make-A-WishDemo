@@ -1361,8 +1361,29 @@ function submitReferralForm() {
     var ph = val('rf-phone');
     put('tl-phone-wrap', ph ? ' at ' + ph : '');
   } catch (e) {}
+  mawJourneyRecord('referral_form_submitted', {
+    referral_source: 'childrens_hospital',
+    child_age: Number((window.demoState.referralAnswers || {}).age) || 0,
+    diagnosis: String((window.demoState.referralAnswers || {}).diagnosis || '')
+  });
   closeReferralModal();
   showPage('timeline'); // same window; chat stays open
+}
+
+// (2026-11-03) Record a custom Journey web event. Command verified in the Genesys Messenger SDK
+// docs: Genesys('command', 'Journey.record', { eventName, customAttributes }). Per the docs,
+// subscribe to Journey.ready first (it republishes if already ready). customAttributes must be
+// a flat object of string/number/boolean; no names or phone numbers are sent (PII).
+// Console: "[MAW journey] recorded ...". Disable with window.MAW_JOURNEY_EVENTS=false.
+function mawJourneyRecord(eventName, attrs) {
+  try {
+    if (window.MAW_JOURNEY_EVENTS === false || typeof window.Genesys !== 'function') return;
+    Genesys('subscribe', 'Journey.ready', function () {
+      Genesys('command', 'Journey.record', { eventName: eventName, customAttributes: attrs || {} },
+        function () { console.info('[MAW journey] recorded', eventName, attrs); },
+        function (err) { console.warn('[MAW journey] record failed', eventName, err); });
+    });
+  } catch (e) { /* tracking must never break the demo */ }
 }
 (function () {
   var c = document.getElementById('referral-modal-close');
