@@ -2285,8 +2285,13 @@ function showCaseUpdateState() {
         // URL" button click handler above has a real amount to attach
         // to the checkout URL. Safe to key off these exact four values —
         // no other quick-reply menu (role, entry choice) uses them.
-        var val = (qr.value != null ? qr.value : qr.text);
-        if (['25', '50', '100', '250'].indexOf(String(val)) !== -1) {
+        // (2026-11-06) Bug: the chips carry text "$100" + payload "100" (no `value`), so the old
+        // lookup of value/text never matched ("$100" has a dollar sign) and the checkout window
+        // fell back to $50. Now: prefer payload, then value, then text; strip everything but digits.
+        var val = (qr.payload != null ? qr.payload : (qr.value != null ? qr.value : qr.text));
+        val = String(val == null ? '' : val).replace(/[^0-9]/g, '');
+        console.log('[MAW amount] quick reply clicked:', JSON.stringify({ text: qr.text, payload: qr.payload, value: qr.value }), '->', val);
+        if (['25', '50', '100', '250'].indexOf(val) !== -1) {
           window.demoState = window.demoState || {};
           window.demoState.selectedAmount = parseInt(val, 10);
         }
