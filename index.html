@@ -2294,6 +2294,17 @@ function showCaseUpdateState() {
         if (['25', '50', '100', '250'].indexOf(val) !== -1) {
           window.demoState = window.demoState || {};
           window.demoState.selectedAmount = parseInt(val, 10);
+          // (2026-11-10) Performance review: Ava's donor-impact reply takes ~8s server-side
+          // (3 model passes + 2 tool calls; see PROJECT_LOG). Show the typing indicator right
+          // after a gift amount is tapped so the wait reads as "Ava is writing". 600ms delay lets
+          // the visitor-echo bubble land first (the dots then sit below it); the dots are removed
+          // by the normal flush when Ava's reply arrives, or after 20s as a safety net.
+          setTimeout(function () {
+            if (typingEl) return;
+            showTyping();
+            var el = typingEl;
+            setTimeout(function () { if (typingEl === el) hideTyping(); }, 20000);
+          }, 600);
         }
         sendQuickReply(qr);
       });
