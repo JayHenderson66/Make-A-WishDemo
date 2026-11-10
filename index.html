@@ -1860,6 +1860,7 @@ function showCaseUpdateState() {
     els.input.value = '';
     Array.prototype.forEach.call(els.body.querySelectorAll('.maw-msgr-yn button'), function (b) { b.disabled = true; });
     if (typeof captureReferralAnswers === 'function') captureReferralAnswers(text);
+    showAvaWait(); // typed referral answers (age/diagnosis) are handled by Ava
     Genesys('command', 'MessagingService.sendMessage', { message: text });
   }
 
@@ -1888,6 +1889,18 @@ function showCaseUpdateState() {
   }
   function hideTyping() {
     if (typingEl) { typingEl.remove(); typingEl = null; }
+  }
+  // (2026-11-10) Shared "Ava is writing" wait indicator, used wherever the next bot reply comes from
+  // an Ava call (~8s): donor gift-amount chips, and the referral role chip, typed answers and
+  // physician Yes/No chips. 600ms delay lets the visitor-echo bubble land first; the normal flush
+  // clears the dots when the reply arrives; 20s safety clear if no reply ever comes.
+  function showAvaWait() {
+    setTimeout(function () {
+      if (typingEl) return;
+      showTyping();
+      var el = typingEl;
+      setTimeout(function () { if (typingEl === el) hideTyping(); }, 20000);
+    }, 600);
   }
 
   // ── rendering ─────────────────────────────────────────────────
@@ -2262,6 +2275,7 @@ function showCaseUpdateState() {
       btn.textContent = label;
       btn.addEventListener('click', function () {
         Array.prototype.forEach.call(wrap.querySelectorAll('button'), function (b) { b.disabled = true; });
+        showAvaWait(); // physician Yes/No answer → Ava runs the eligibility check
         if (window.Genesys) Genesys('command', 'MessagingService.sendMessage', { message: label });
       });
       wrap.appendChild(btn);
@@ -2295,16 +2309,10 @@ function showCaseUpdateState() {
           window.demoState = window.demoState || {};
           window.demoState.selectedAmount = parseInt(val, 10);
           // (2026-11-10) Performance review: Ava's donor-impact reply takes ~8s server-side
-          // (3 model passes + 2 tool calls; see PROJECT_LOG). Show the typing indicator right
-          // after a gift amount is tapped so the wait reads as "Ava is writing". 600ms delay lets
-          // the visitor-echo bubble land first (the dots then sit below it); the dots are removed
-          // by the normal flush when Ava's reply arrives, or after 20s as a safety net.
-          setTimeout(function () {
-            if (typingEl) return;
-            showTyping();
-            var el = typingEl;
-            setTimeout(function () { if (typingEl === el) hideTyping(); }, 20000);
-          }, 600);
+          // (see PROJECT_LOG) — show the "Ava is writing" dots right after a gift amount is tapped.
+          showAvaWait();
+        } else if (/parent|guardian|medical/i.test(qr.text || '')) {
+          showAvaWait(); // referral role chip → next reply comes from Ava (Scenario B)
         }
         sendQuickReply(qr);
       });
