@@ -1294,6 +1294,21 @@ function monthlyIsOn() {
 // ══ CHECKOUT MODAL (2026-09-30) — mirrors the functions above but
 // targets the modal's own elements (co-modal-*), since it's a
 // separate form from #page-checkout rather than a clone of it. ══
+// (2026-11-10) Donor closing line timing: after the visitor taps Continue on the chat's "Ready to
+// complete your gift?" card, the bot's closing message ("Thank you for helping make Sammy's wish
+// come true…") is HELD (shared pacing queue, see isHeld) until the visitor clicks Continue in the
+// "Complete your gift" window (success view shown), then released ~1.5s later. If the window is closed
+// without completing, it is released shortly after closing so the message is never lost.
+window.mawDonor = { hold: false };
+function releaseDonorHold(delayMs) {
+  var D = window.mawDonor;
+  if (!D || !D.hold) return;
+  D.hold = false;
+  D.instant = true; // first released message appears with no typing dots
+  console.info('[MAW donor] checkout step finished; releasing closing message in ' + delayMs + 'ms');
+  setTimeout(function () { if (window.mawFlushHeldMessages) window.mawFlushHeldMessages(); }, delayMs);
+}
+
 function openCheckoutModal(amount) {
   const s = STORIES[window.demoState.selectedStory] || STORIES.sammy;
   document.getElementById('checkout-modal-story-line').textContent =
@@ -1312,6 +1327,7 @@ function openCheckoutModal(amount) {
 
 function closeCheckoutModal() {
   document.getElementById('checkout-modal-backdrop').classList.remove('open');
+  releaseDonorHold(600);
 }
 
 // ══ REFERRAL FORM MODAL (2026-10-30) ═══════════════════════════
@@ -1482,6 +1498,7 @@ function completeModalCheckout() {
   document.getElementById('checkout-modal-success-visual').className = 'vignette-visual ' + s.visual;
   document.getElementById('checkout-modal-form').style.display = 'none';
   document.getElementById('checkout-modal-success').style.display = 'block';
+  releaseDonorHold(0); // closing line appears together with the thank-you window
 }
 
 (function initCheckoutModalDismiss() {
@@ -1741,7 +1758,7 @@ function showCaseUpdateState() {
       // never appears above the bot's last line.
       var waits = 0;
       (function showEnded() {
-        if ((heldMessages.length || flushing) && waits++ < 60) { setTimeout(showEnded, 300); return; }
+        if ((heldMessages.length || flushing) && ((window.mawDonor && window.mawDonor.hold) || waits++ < 60)) { setTimeout(showEnded, 300); return; }
         addSystemLine('This conversation has ended.');
       })();
     });
@@ -1928,7 +1945,7 @@ function showCaseUpdateState() {
   // line has been shown and until the referral form is submitted/closed.
   function isHeld() {
     var R = window.mawReferral;
-    return isVideoOpen() || !!(R && R.hold && R.allowOne <= 0);
+    return isVideoOpen() || !!(R && R.hold && R.allowOne <= 0) || !!(window.mawDonor && window.mawDonor.hold);
   }
   function flushHeld() {
     if (flushing || !heldMessages.length) return;
@@ -1936,7 +1953,10 @@ function showCaseUpdateState() {
     (function next() {
       if (!heldMessages.length) { flushing = false; return; }
       if (isHeld()) { flushing = false; return; } // re-opened; wait for next release
-      showTyping();
+      // (2026-11-10) donor closing line: show it at the same moment as the thank-you window (no dots).
+      var instant = !!(window.mawDonor && window.mawDonor.instant);
+      if (window.mawDonor) window.mawDonor.instant = false;
+      if (!instant) showTyping();
       setTimeout(function () {
         hideTyping();
         var mm = heldMessages.shift();
@@ -1944,7 +1964,7 @@ function showCaseUpdateState() {
         if (mm && mm.text && ((mm.direction || '').toLowerCase() === 'outbound') && typeof referralMessageRendered === 'function') referralMessageRendered();
         scrollToBottom();
         setTimeout(next, PACE_GAP);
-      }, PACE_TYPING);
+      }, instant ? 0 : PACE_TYPING);
     })();
   }
   window.mawFlushHeldMessages = flushHeld;
@@ -2190,6 +2210,7 @@ function showCaseUpdateState() {
         // also post the click back so the Bot Flow moves on (stops the no-input reprompt), exactly like
         // the referral card. A Link-type button keeps the old behavior (window only, no postback).
         if (card.title && /ready to complete your gift/i.test(card.title) && action.type !== 'Link') {
+          window.mawDonor.hold = true; // hold the bot's closing line until the checkout window's Continue
           openCheckoutModal(window.demoState && window.demoState.selectedAmount);
           sendCardPostback(action);
           return;
